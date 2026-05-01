@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>MyMeet | Career Fair Intelligence</title>
+  <meta name="description"
+    content="Run smarter career fairs effortlessly. Create events, generate QR codes, share resources, and get real time analytics.">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/landing.css">
+  <script>try { const p = JSON.parse(localStorage.getItem('mm_prefs') || '{}'); if (p.theme === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); document.documentElement.style.background = '#0a0a0a'; } } catch (e) { }</script>
+</head>
+
+<body style="background:#0a0a0a;overflow:hidden" class="page-ready">
+
+  <div id="landing">
+    <div class="landing-bg">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="grid-overlay"></div>
+    </div>
+
+    <div class="landing-split">
+      <div class="landing-left">
+        <div class="landing-left-inner">
+          <div class="landing-badge"><span class="landing-dot"></span>Career Fair Intelligence</div>
+          <img src="background_removed.png" alt="MyMeet" style="height:56px;width:auto;margin-bottom:8px;display:block">
+          <h1 class="landing-title">Run smarter<br><span class="accent-word">career fairs</span></h1>
+          <p class="landing-subtitle">Create events, generate QR codes, share resources, and get real time analytics,
+            all in one platform.</p>
+          <div class="landing-actions">
+            <a href="dashboard.html" class="btn-launch">Launch MyMeet</a>
+          </div>
+          <div class="landing-stats">
+            <div class="ls-item"><span class="ls-num" id="cnt-events">0</span><span class="ls-label">Events</span></div>
+            <div class="ls-divider"></div>
+            <div class="ls-item"><span class="ls-num" id="cnt-attend">284</span><span class="ls-label">Attendees</span>
+            </div>
+            <div class="ls-divider"></div>
+            <div class="ls-item"><span class="ls-num" id="cnt-qr">0</span><span class="ls-label">QR Codes</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="landing-right">
+        <div class="bento-grid">
+
+          <div class="bento-item bento-2col bento-persistent">
+            <div class="bento-dot-pattern"></div>
+            <div class="bento-top">
+              <div class="bento-icon" style="padding:0;background:transparent;border:none">
+                <img src="background_removed.png" alt="MyMeet" style="height:28px;width:auto;display:block">
+              </div>
+              <span class="bento-status">Core</span>
+            </div>
+            <div class="bento-body">
+              <h3>Smart Event Creation <span class="bento-meta">4 steps</span></h3>
+              <p>Guided wizard covering title, date, location, resources, QR codes, and slides in under 3 minutes.</p>
+            </div>
+            <div class="bento-tags"><span class="bento-tag">#Wizard</span><span class="bento-tag">#Setup</span></div>
+            <span class="bento-cta">Explore</span>
+          </div>
+
+          <div class="bento-item">
+            <div class="bento-dot-pattern"></div>
+            <div class="bento-top">
+              <div class="bento-icon" style="font-family:var(--font-display);font-weight:800;font-size:12px">GM</div>
+              <span class="bento-status">Virtual</span>
+            </div>
+            <div class="bento-body">
+              <h3>Google Meet <span class="bento-meta">1 click</span></h3>
+              <p>Auto format meeting codes and generate shareable join links instantly.</p>
+            </div>
+            <div class="bento-tags"><span class="bento-tag">#Online</span></div>
+            <span class="bento-cta">Explore</span>
+          </div>
+
+          <div class="bento-item">
+            <div class="bento-dot-pattern"></div>
+            <div class="bento-top">
+              <div class="bento-icon" style="font-family:var(--font-display);font-weight:800;font-size:12px">MP</div>
+              <span class="bento-status">Live</span>
+            </div>
+            <div class="bento-body">
+              <h3>Google Maps <span class="bento-meta">embedded</span></h3>
+              <p>Search venues and pin them live on an embedded map for attendees.</p>
+            </div>
+            <div class="bento-tags"><span class="bento-tag">#InPerson</span></div>
+            <span class="bento-cta">Explore</span>
+          </div>
+
+          <div class="bento-item">
+            <div class="bento-dot-pattern"></div>
+            <div class="bento-top">
+              <div class="bento-icon" style="font-family:var(--font-display);font-weight:800;font-size:12px">QR</div>
+              <span class="bento-status">Scan</span>
+            </div>
+            <div class="bento-body">
+              <h3>QR Codes <span class="bento-meta">up to 6</span></h3>
+              <p>Custom QR codes for check ins, surveys, LinkedIn, or any URL.</p>
+            </div>
+            <div class="bento-tags"><span class="bento-tag">#Scanning</span></div>
+            <span class="bento-cta">Explore</span>
+          </div>
+
+          <div class="bento-item bento-2col">
+            <div class="bento-dot-pattern"></div>
+            <div class="bento-top">
+              <div class="bento-icon" style="font-family:var(--font-display);font-weight:800;font-size:12px">AN</div>
+              <span class="bento-status">Intelligence</span>
+            </div>
+            <div class="bento-body">
+              <h3>Custom Analytics <span class="bento-meta">real time</span></h3>
+              <p>Build your own data fields and watch charts generate automatically.</p>
+            </div>
+            <div class="bento-tags"><span class="bento-tag">#Charts</span><span class="bento-tag">#Data</span><span
+                class="bento-tag">#Presets</span></div>
+            <span class="bento-cta">Explore</span>
+          </div>
+
+          <div class="bento-item">
+            <div class="bento-dot-pattern"></div>
+            <div class="bento-top">
+              <div class="bento-icon" style="font-family:var(--font-display);font-weight:800;font-size:12px">EX</div>
+              <span class="bento-status">Export</span>
+            </div>
+            <div class="bento-body">
+              <h3>Excel & PDF <span class="bento-meta">.xlsx</span></h3>
+              <p>Formatted workbook with 4 sheets. Ready for stakeholders.</p>
+            </div>
+            <div class="bento-tags"><span class="bento-tag">#Export</span></div>
+            <span class="bento-cta">Explore</span>
+          </div>
+
+          <div class="bento-item">
+            <div class="bento-dot-pattern"></div>
+            <div class="bento-top">
+              <div class="bento-icon" style="font-family:var(--font-display);font-weight:800;font-size:12px">RS</div>
+              <span class="bento-status">Hub</span>
+            </div>
+            <div class="bento-body">
+              <h3>Resources <span class="bento-meta">max 10</span></h3>
+              <p>Attach labelled links, sites, forms, docs, anything attendees need.</p>
+            </div>
+            <div class="bento-tags"><span class="bento-tag">#Links</span></div>
+            <span class="bento-cta">Explore</span>
+          </div>
+
+          <div class="bento-item">
+            <div class="bento-dot-pattern"></div>
+            <div class="bento-top">
+              <div class="bento-icon" style="font-family:var(--font-display);font-weight:800;font-size:12px">SL</div>
+              <span class="bento-status">Secure</span>
+            </div>
+            <div class="bento-body">
+              <h3>Locked Slides <span class="bento-meta">private</span></h3>
+              <p>Upload presentations. Attendees see blurred previews only.</p>
+            </div>
+            <div class="bento-tags"><span class="bento-tag">#Security</span></div>
+            <span class="bento-cta">Explore</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function animCount(el, target) {
+      let n = 0; const s = Math.ceil(target / 40);
+      const iv = setInterval(() => { n = Math.min(n + s, target); el.textContent = n; if (n >= target) clearInterval(iv); }, 30);
+    }
+    window.addEventListener('load', () => {
+      const events = JSON.parse(localStorage.getItem('mm_events') || '[]');
+      animCount(document.getElementById('cnt-events'), events.length || 3);
+      animCount(document.getElementById('cnt-attend'), 284);
+      animCount(document.getElementById('cnt-qr'), events.reduce((a, e) => a + (e.qrCodes || []).length, 0) || 12);
+    });
+    // Smooth transition on internal links
+    document.addEventListener('click', e => {
+      const link = e.target.closest('a[href]');
+      if (!link) return;
+      const href = link.getAttribute('href');
+      if (!href || href.startsWith('#') || href.startsWith('http') || link.target === '_blank') return;
+      e.preventDefault();
+      document.body.classList.add('page-exit');
+      document.body.classList.remove('page-ready');
+      setTimeout(() => { window.location.href = href; }, 140);
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Event Detail | MyMeet</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/components.css">
+  <link rel="stylesheet" href="styles/pages.css">
+  <script>try{const p=JSON.parse(localStorage.getItem('mm_prefs')||'{}');if(p.theme==='dark'){document.documentElement.setAttribute('data-theme','dark');document.documentElement.style.background='#0a0a0a';}}catch(e){}</script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU" crossorigin="anonymous"></script>
+</head>
+<body>
+  <main class="container" style="padding-top:40px;padding-bottom:80px">
+    <div id="detail-content"></div>
+  </main>
+
+  <script src="scripts/storage.js"></script>
+  <script src="scripts/app.js"></script>
+  <script>
+    App.init('events');
+    const S = Storage.sanitize;
+
+    const params = new URLSearchParams(location.search);
+    const eventId = parseInt(params.get('id'));
+    let ev = Storage.getEvent(eventId);
+    let editMode = false;
+
+    if (!ev) {
+      document.getElementById('detail-content').innerHTML = `
+        <div class="empty-state">
+          ${App.EMPTY_SVGS.events}
+          <h3>Event not found</h3>
+          <p>This event may have been deleted.</p>
+          <a href="events.html" class="btn btn-primary" style="margin-top:8px">Back to Events</a>
+        </div>`;
+    } else {
+      renderDetail();
+    }
+
+    function renderDetail() {
+      ev = Storage.getEvent(eventId);
+      if (!ev) return;
+      const dateStr = ev.date ? new Date(ev.date).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'No date set';
+      const timeStr = ev.date ? new Date(ev.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '';
+      const isOnline = ev.location?.type === 'online';
+      const meetOrZoomLink = ev.location?.meetLink || ev.location?.zoomLink || '';
+      const meetOrZoomLabel = ev.location?.meetLink ? 'Google Meet' : (ev.location?.zoomLink ? 'Zoom' : 'Online');
+
+      document.getElementById('detail-content').innerHTML = `
+        <div class="section-header animate-in">
+          <button class="back-btn" onclick="App.navigateTo('events.html')"></button>
+          <div style="flex:1">
+            ${editMode ? `<input class="form-input" id="edit-title" value="${S(ev.title)}" style="font-size:24px;font-weight:700;font-family:var(--font-display);padding:8px 12px">` : `<h2 style="font-size:26px">${S(ev.title)}</h2>`}
+            <div class="event-meta" style="margin-top:6px">
+              <span class="event-meta-item">${dateStr}${timeStr ? ' at ' + timeStr : ''}</span>
+              <span class="event-meta-item">${isOnline ? meetOrZoomLabel : S(ev.location?.name || 'In Person')}</span>
+              ${ev.category ? `<span class="badge badge-default">${S(ev.category.replace('-',' '))}</span>` : ''}
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn ${editMode ? 'btn-primary' : 'btn-secondary'}" onclick="toggleEdit()">${editMode ? 'Save' : 'Edit'}</button>
+            <button class="btn btn-ghost" onclick="shareEvent()">Share</button>
+            <button class="btn btn-ghost" onclick="generateForm()">Attendee Form</button>
+          </div>
+        </div>
+
+        <div class="detail-grid animate-in animate-in-delay-1">
+          <div>
+            <div class="detail-section">
+              <h3>About</h3>
+              ${editMode
+                ? `<textarea class="form-textarea" id="edit-desc" rows="4">${ev.desc || ''}</textarea>`
+                : `<p style="color:var(--text-soft);line-height:1.7">${ev.desc ? S(ev.desc) : '<em style="color:var(--text-muted)">No description</em>'}</p>`
+              }
+            </div>
+
+            ${editMode ? `
+            <div class="detail-section">
+              <h3>Date & Time</h3>
+              <input class="form-input" id="edit-date" type="datetime-local" value="${ev.date || ''}">
+            </div>
+            <div class="detail-section">
+              <h3>Category</h3>
+              <select class="form-input" id="edit-category">
+                <option value="">None</option>
+                <option value="career-fair" ${ev.category === 'career-fair' ? 'selected' : ''}>Career Fair</option>
+                <option value="workshop" ${ev.category === 'workshop' ? 'selected' : ''}>Workshop</option>
+                <option value="networking" ${ev.category === 'networking' ? 'selected' : ''}>Networking</option>
+                <option value="conference" ${ev.category === 'conference' ? 'selected' : ''}>Conference</option>
+                <option value="meetup" ${ev.category === 'meetup' ? 'selected' : ''}>Meetup</option>
+                <option value="other" ${ev.category === 'other' ? 'selected' : ''}>Other</option>
+              </select>
+            </div>
+            ` : ''}
+
+            <div class="detail-section">
+              <h3>Location</h3>
+              ${isOnline ? `
+                <div class="card card-compact" style="background:var(--bg-soft)">
+                  <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                    <div style="width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-inv);font-family:var(--font-display);font-weight:800;font-size:10px">GM</div>
+                    <strong>${meetOrZoomLabel}</strong>
+                  </div>
+                  ${meetOrZoomLink ? `
+                    <div style="font-family:monospace;font-size:13px;background:var(--bg-card);padding:10px;border-radius:var(--radius-sm);word-break:break-all;margin-bottom:10px;border:1px solid var(--border)">${S(meetOrZoomLink)}</div>
+                    <div style="display:flex;gap:6px">
+                      <button class="btn btn-primary btn-sm" onclick="navigator.clipboard.writeText('${meetOrZoomLink}');App.toast('Copied!','success')">Copy Link</button>
+                      <a href="${meetOrZoomLink}" target="_blank" class="btn btn-ghost btn-sm">Open</a>
+                    </div>
+                  ` : `<p class="text-muted text-sm">Meeting code: ${S(ev.location.meetCode || ev.location.zoomId || 'N/A')}</p>`}
+                </div>
+              ` : `
+                <div class="maps-box">
+                  <iframe class="map-iframe" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=${encodeURIComponent((ev.location?.name || '') + ' ' + (ev.location?.address || ''))}&output=embed&z=16"></iframe>
+                  <div style="padding:14px;display:flex;align-items:center;gap:12px;border-top:1px solid var(--border)">
+                    <div style="flex:1">
+                      <div style="font-weight:700;font-size:14px">${S(ev.location?.name || '')}</div>
+                      <div class="text-sm text-muted">${S(ev.location?.address || '')}</div>
+                    </div>
+                    <a href="https://www.google.com/maps/search/?api=1&query=${ev.location?.lat},${ev.location?.lng}" target="_blank" class="btn btn-primary btn-sm">Open Maps</a>
+                  </div>
+                </div>
+              `}
+            </div>
+
+            <div class="detail-section">
+              <h3>Resources (${(ev.resources || []).length})</h3>
+              ${(ev.resources || []).length ? `
+                <div style="display:flex;flex-direction:column;gap:6px">
+                  ${ev.resources.map(r => `
+                    <a href="${S(r.url)}" target="_blank" class="card card-compact card-hover" style="display:flex;align-items:center;gap:10px;text-decoration:none;padding:12px 16px">
+                      <div style="flex:1;min-width:0">
+                        <div style="font-weight:600;font-size:14px">${S(r.label)}</div>
+                        <div class="text-sm text-muted" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${S(r.url)}</div>
+                      </div>
+                    </a>
+                  `).join('')}
+                </div>
+              ` : '<p class="text-sm text-muted">No resources attached.</p>'}
+            </div>
+          </div>
+
+          <div>
+            <div class="detail-section">
+              <h3>QR Codes (${(ev.qrCodes || []).length})</h3>
+              ${(ev.qrCodes || []).length ? `
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" id="detail-qrs">
+                  ${ev.qrCodes.map((q, i) => `
+                    <div class="card card-compact" style="text-align:center">
+                      <div style="font-size:12px;font-weight:600;margin-bottom:8px">${S(q.label)}</div>
+                      <div id="detail-qr-${i}"></div>
+                      <div class="text-xs text-muted" style="margin-top:6px;word-break:break-all">${S(q.url)}</div>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : '<p class="text-sm text-muted">No QR codes generated.</p>'}
+            </div>
+
+            <div class="detail-section">
+              <h3>Details</h3>
+              <div class="card card-compact" style="background:var(--bg-soft)">
+                <div style="display:grid;gap:10px;font-size:14px">
+                  <div style="display:flex;justify-content:space-between"><span class="text-muted">Created</span><span>${new Date(ev.created).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span></div>
+                  ${ev.modified ? `<div style="display:flex;justify-content:space-between"><span class="text-muted">Modified</span><span>${new Date(ev.modified).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span></div>` : ''}
+                  <div style="display:flex;justify-content:space-between"><span class="text-muted">Analytics Fields</span><span>${(ev.fieldsSnapshot || []).length}</span></div>
+                  ${ev.slideName ? `<div style="display:flex;justify-content:space-between"><span class="text-muted">Slides</span><span>Locked: ${S(ev.slideName)}</span></div>` : ''}
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h3>Actions</h3>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <button class="btn btn-secondary w-full" onclick="exportExcel()">Export to Excel</button>
+                <button class="btn btn-secondary w-full" onclick="duplicateEvent()">Duplicate Event</button>
+                <button class="btn btn-danger w-full" onclick="deleteEvent()">Delete Event</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      if (ev.qrCodes?.length) {
+        setTimeout(() => {
+          ev.qrCodes.forEach((q, i) => {
+            const el = document.getElementById('detail-qr-' + i);
+            if (el) {
+              try { new QRCode(el, { text: q.url, width: 100, height: 100, colorDark: '#0a0a0a', colorLight: '#ffffff' }); } catch(e) {}
+            }
+          });
+        }, 50);
+      }
+    }
+
+    function toggleEdit() {
+      if (editMode) {
+        const updates = {
+          title: document.getElementById('edit-title')?.value.trim() || ev.title,
+          desc: document.getElementById('edit-desc')?.value.trim(),
+          date: document.getElementById('edit-date')?.value || ev.date,
+          category: document.getElementById('edit-category')?.value || ev.category
+        };
+        if (!updates.title) { App.toast('Title is required', 'error'); return; }
+        Storage.updateEvent(eventId, updates);
+        App.toast('Event updated!', 'success');
+        editMode = false;
+      } else {
+        editMode = true;
+      }
+      renderDetail();
+    }
+
+    function shareEvent() {
+      const t = `${ev.title}\n${ev.date ? new Date(ev.date).toLocaleString('en-US') : 'TBD'}${ev.desc ? '\n\n' + ev.desc : ''}`;
+      if (navigator.share) navigator.share({ title: ev.title, text: t });
+      else { navigator.clipboard.writeText(t); App.toast('Copied to clipboard!', 'success'); }
+    }
+
+    function generateForm() { App.navigateTo('form.html?eid=' + eventId); }
+
+    function duplicateEvent() {
+      App.promptModal({
+        title: 'Duplicate with new date?',
+        placeholder: 'New event name (optional)',
+        value: 'Copy of ' + ev.title,
+        onConfirm: (name) => {
+          Storage.duplicateEvent(eventId, { title: name });
+          App.toast('Duplicated!', 'success');
+          App.navigateTo('events.html');
+        }
+      });
+    }
+
+    function deleteEvent() {
+      App.confirmModal({
+        title: 'Delete "' + ev.title + '"?',
+        message: 'This cannot be undone after 30 seconds.',
+        confirmText: 'Delete',
+        danger: true,
+        onConfirm: () => {
+          Storage.deleteEvent(eventId);
+          App.toast('Event deleted', 'success');
+          App.navigateTo('events.html');
+        }
+      });
+    }
+
+    function exportExcel() {
+      const wb = XLSX.utils.book_new();
+      const ws1 = XLSX.utils.aoa_to_sheet([
+        ['Field', 'Value'], ['Title', ev.title],
+        ['Date', ev.date ? new Date(ev.date).toLocaleString('en-US') : ''],
+        ['Description', ev.desc || ''],
+        ['Location', ev.location?.type || ''],
+        ev.location?.type === 'online' ? ['Meet Link', ev.location?.meetLink || ev.location?.zoomLink || ''] : ['Venue', (ev.location?.name || '') + ', ' + (ev.location?.address || '')],
+        ['Created', new Date(ev.created).toLocaleString('en-US')]
+      ]);
+      ws1['!cols'] = [{ wch: 22 }, { wch: 60 }];
+      XLSX.utils.book_append_sheet(wb, ws1, 'Details');
+      XLSX.writeFile(wb, ev.title.replace(/[^a-z0-9]/gi, '_') + '.xlsx');
+      App.toast('Exported!', 'success');
+    }
+  </script>
+</body>
+</html>

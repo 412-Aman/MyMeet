@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Analytics | MyMeet</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/components.css">
+  <link rel="stylesheet" href="styles/pages.css">
+  <script>try{const p=JSON.parse(localStorage.getItem('mm_prefs')||'{}');if(p.theme==='dark'){document.documentElement.setAttribute('data-theme','dark');document.documentElement.style.background='#0a0a0a';}}catch(e){}</script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js" integrity="sha384-DhxhYObIMeMNGyAG7iK11OHzBIKyEIeRL0ad1iFPAOwZB8iirUlTT0O/WJJUk8+o" crossorigin="anonymous"></script>
+</head>
+<body>
+  <main class="container" style="padding-top:40px;padding-bottom:80px">
+
+    <div class="section-header animate-in">
+      <button class="back-btn" onclick="App.navigateTo('dashboard.html')">Back</button>
+      <h2>Analytics</h2>
+    </div>
+
+    <div class="analytics-layout">
+      <div class="builder-card animate-in animate-in-delay-1">
+        <h3>Analytics Builder</h3>
+        <p class="sub">Define what data you collect. Charts update live.</p>
+
+        <div class="preset-row">
+          <div class="form-label">Quick Presets</div>
+          <div class="preset-chips">
+            <button class="chip" onclick="applyPreset('university')">University</button>
+            <button class="chip" onclick="applyPreset('corporate')">Corporate</button>
+            <button class="chip" onclick="applyPreset('startup')">Startup</button>
+            <button class="chip" onclick="applyPreset('networking')">Networking</button>
+          </div>
+        </div>
+
+        <div class="add-field-area">
+          <div class="form-label" style="margin-bottom:8px">Add Custom Field</div>
+          <div class="add-field-row">
+            <input class="form-input" id="nf-name" placeholder="Field name" type="text" onkeydown="if(event.key==='Enter')addField()">
+            <select class="type-sel" id="nf-type" onchange="toggleOpts()">
+              <option value="text">Text</option>
+              <option value="select">Dropdown</option>
+              <option value="number">Number</option>
+              <option value="email">Email</option>
+              <option value="phone">Phone</option>
+            </select>
+          </div>
+          <input class="options-input" id="nf-options" placeholder="Options comma separated (e.g. Bachelors, Masters, PhD)" type="text">
+          <button class="add-field-btn" onclick="addField()">+ Add Field</button>
+        </div>
+
+        <div class="form-label" style="margin-bottom:8px">Your Fields (<span id="field-count">0</span>)</div>
+        <div class="field-list" id="field-list"><div class="no-fields">No fields yet. Add above or pick a preset.</div></div>
+
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+          <div class="form-label" style="margin-bottom:8px">Chart Style</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap">
+            <button class="chip active" id="ct-bar" onclick="setChartType('bar')">Bar</button>
+            <button class="chip" id="ct-doughnut" onclick="setChartType('doughnut')">Donut</button>
+            <button class="chip" id="ct-pie" onclick="setChartType('pie')">Pie</button>
+            <button class="chip" id="ct-line" onclick="setChartType('line')">Line</button>
+            <button class="chip" id="ct-radar" onclick="setChartType('radar')">Radar</button>
+            <button class="chip" id="ct-polarArea" onclick="setChartType('polarArea')">Polar</button>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+          <div class="form-label" style="margin-bottom:8px">Saved Templates</div>
+          <div id="template-list" style="margin-bottom:8px"></div>
+          <button class="btn btn-ghost btn-sm w-full" onclick="saveCurrentAsTemplate()">Save Current as Template</button>
+        </div>
+      </div>
+
+      <div class="analytics-right animate-in animate-in-delay-2" id="analytics-right">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+          <div class="ev-sel-row" style="flex:1">
+            <label>Event:</label>
+            <select class="form-input" id="ev-sel" onchange="renderCharts()" style="max-width:280px">
+              <option value="">Demo data</option>
+            </select>
+          </div>
+          <div class="ev-sel-row">
+            <label>Compare:</label>
+            <select class="form-input" id="ev-compare" onchange="renderCharts()" style="max-width:280px">
+              <option value="">None</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="placeholder-analytics" id="analytics-placeholder">
+          <div class="ph-icon" style="font-family:var(--font-display);font-weight:800;font-size:40px;color:var(--text-muted)">AN</div>
+          <strong>Add analytics fields to see charts</strong>
+          <p class="text-sm" style="margin-top:6px">Use presets or custom fields to define your audience data</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="scripts/storage.js"></script>
+  <script src="scripts/app.js"></script>
+  <script>
+    App.init('analytics');
+    const S = Storage.sanitize;
+
+    const PRESETS = {
+      university: [
+        { name: 'Degree', type: 'select', options: ["Bachelors", "Masters", "PhD", "Associate", "Other"] },
+        { name: 'Year of Study', type: 'select', options: ["Year 1", "Year 2", "Year 3", "Year 4", "Postgrad"] },
+        { name: 'Major / Field', type: 'text', options: [] },
+        { name: 'Age Group', type: 'select', options: ["18 to 21", "22 to 25", "26 to 29", "30+"] },
+        { name: 'Nationality', type: 'text', options: [] }
+      ],
+      corporate: [
+        { name: 'Company Name', type: 'text', options: [] },
+        { name: 'Job Title', type: 'text', options: [] },
+        { name: 'Industry', type: 'select', options: ["Tech", "Finance", "Healthcare", "Retail", "Education", "Other"] },
+        { name: 'Company Size', type: 'select', options: ["1 to 10", "11 to 50", "51 to 200", "201 to 500", "500+"] },
+        { name: 'Email', type: 'email', options: [] },
+        { name: 'Phone', type: 'phone', options: [] }
+      ],
+      startup: [
+        { name: 'Role', type: 'select', options: ["Founder", "CTO", "Engineer", "Designer", "Product", "Marketing", "Other"] },
+        { name: 'Funding Stage', type: 'select', options: ["Idea", "Pre Seed", "Seed", "Series A", "Series B+", "Bootstrapped"] },
+        { name: 'Industry Vertical', type: 'text', options: [] },
+        { name: 'Email', type: 'email', options: [] },
+        { name: 'LinkedIn', type: 'text', options: [] }
+      ],
+      networking: [
+        { name: 'Name', type: 'text', options: [] },
+        { name: 'Email', type: 'email', options: [] },
+        { name: 'Phone', type: 'phone', options: [] },
+        { name: 'Profession', type: 'text', options: [] },
+        { name: 'Interest Area', type: 'select', options: ["Tech", "Business", "Creative", "Science", "Social Impact", "Other"] }
+      ]
+    };
+
+    const FI = { text: 'TXT', select: 'SEL', number: 'NUM', email: 'EML', phone: 'PHN' };
+    let chartInstances = {};
+    let selectedChartType = 'bar';
+    const GRAYS = ['#222', '#444', '#666', '#888', '#aaa', '#ccc', '#ddd'];
+    const GRAYS_ALPHA = GRAYS.map(c => c + 'cc');
+
+    function setChartType(type) {
+      selectedChartType = type;
+      document.querySelectorAll('[id^="ct-"]').forEach(b => b.classList.remove('active'));
+      document.getElementById('ct-' + type)?.classList.add('active');
+      renderCharts();
+    }
+
+    function toggleOpts() { document.getElementById('nf-options').style.display = document.getElementById('nf-type').value === 'select' ? 'block' : 'none'; }
+
+    function applyPreset(key) {
+      Storage.setFields(JSON.parse(JSON.stringify(PRESETS[key])));
+      renderFieldList(); renderCharts();
+      App.toast('Preset applied!', 'success');
+    }
+
+    function addField() {
+      const name = document.getElementById('nf-name').value.trim();
+      const type = document.getElementById('nf-type').value;
+      if (!name) { App.toast('Enter a field name', 'error'); return; }
+      const opts = type === 'select' ? document.getElementById('nf-options').value.split(',').map(o => o.trim()).filter(Boolean) : [];
+      if (type === 'select' && !opts.length) { App.toast('Add comma separated options for dropdown', 'error'); return; }
+      Storage.addField({ name, type, options: opts });
+      document.getElementById('nf-name').value = ''; document.getElementById('nf-options').value = '';
+      renderFieldList(); renderCharts();
+      App.toast('Field added!', 'success');
+    }
+
+    function removeField(i) { Storage.removeField(i); renderFieldList(); renderCharts(); }
+
+    function renderFieldList() {
+      const fields = Storage.getFields();
+      document.getElementById('field-count').textContent = fields.length;
+      const list = document.getElementById('field-list');
+      if (!fields.length) { list.innerHTML = '<div class="no-fields">No fields yet. Add above or pick a preset.</div>'; return; }
+      list.innerHTML = fields.map((f, i) => `
+        <div class="field-item"><span class="fi-icon">${FI[f.type]||'TXT'}</span><span class="fi-name">${S(f.name)}</span><span class="fi-type">${f.type}</span><button class="fi-del" onclick="removeField(${i})">x</button></div>`).join('');
+    }
+
+    function renderTemplates() {
+      const templates = Storage.getTemplates();
+      const el = document.getElementById('template-list');
+      if (!templates.length) { el.innerHTML = '<p class="text-sm text-muted">No saved templates yet.</p>'; return; }
+      el.innerHTML = templates.map((t, i) => `
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bg-soft)">
+          <span style="flex:1;font-size:13px;font-weight:500">${S(t.name)} <span class="text-muted">(${t.fields.length})</span></span>
+          <button class="btn btn-sm btn-ghost" onclick="loadTemplate(${i})">Use</button>
+          <button class="fi-del" onclick="deleteTemplate(${i})">x</button>
+        </div>`).join('');
+    }
+    function saveCurrentAsTemplate() {
+      const fields = Storage.getFields();
+      if (!fields.length) { App.toast('Add fields first', 'error'); return; }
+      App.promptModal({ title: 'Save Template', placeholder: 'Template name',
+        onConfirm: (name) => { Storage.saveTemplate(name, fields); renderTemplates(); App.toast('Template saved!', 'success'); }
+      });
+    }
+    function loadTemplate(idx) { Storage.applyTemplate(idx); renderFieldList(); renderCharts(); App.toast('Template loaded!', 'success'); }
+    function deleteTemplate(idx) { Storage.deleteTemplate(idx); renderTemplates(); App.toast('Template removed', 'success'); }
+
+    function updateEvSel() {
+      const events = Storage.getEvents();
+      const opts = events.map((ev, i) => `<option value="${i}">${S(ev.title)}</option>`).join('');
+      document.getElementById('ev-sel').innerHTML = '<option value="">Demo data</option>' + opts;
+      document.getElementById('ev-compare').innerHTML = '<option value="">None</option>' + opts;
+    }
+
+    function renderCharts() {
+      const right = document.getElementById('analytics-right');
+      const placeholder = document.getElementById('analytics-placeholder');
+      Object.values(chartInstances).forEach(c => { try { c.destroy(); } catch(e) {} });
+      chartInstances = {};
+      right.querySelectorAll('.stats-row,.chart-card,.text-field-card').forEach(el => el.remove());
+
+      const fields = Storage.getFields();
+      if (!fields.length) { placeholder.style.display = 'block'; return; }
+      placeholder.style.display = 'none';
+
+      const evIdx = document.getElementById('ev-sel').value;
+      const cmpIdx = document.getElementById('ev-compare').value;
+      const events = Storage.getEvents();
+
+      function getDataForEvent(idx) {
+        if (idx !== '' && events[parseInt(idx)]) {
+          const e = events[parseInt(idx)];
+          if (!e.mockData || !e.mockData.length) {
+            e.mockData = Storage.genMock(e.fieldsSnapshot?.length ? e.fieldsSnapshot : fields);
+            Storage.updateEvent(e.id, { mockData: e.mockData });
+          }
+          return e.mockData;
+        }
+        return Storage.genMock(fields);
+      }
+
+      const data = getDataForEvent(evIdx);
+      const cmpData = cmpIdx !== '' ? getDataForEvent(cmpIdx) : null;
+
+      const total = 100 + Math.floor(Math.random() * 150);
+      const scans = Math.floor(total * .75 + Math.random() * total * .2);
+
+      const srow = document.createElement('div');
+      srow.className = 'stats-row';
+      srow.innerHTML = `
+        <div class="stat-card"><span class="snum">${total}</span><span class="slbl">Total Attendees</span></div>
+        <div class="stat-card"><span class="snum">${scans}</span><span class="slbl">QR Scans</span></div>
+        <div class="stat-card"><span class="snum">${((scans/total)*100).toFixed(1)}%</span><span class="slbl">Engagement</span></div>`;
+      right.appendChild(srow);
+
+      if (cmpData) {
+        const agg = document.createElement('div');
+        agg.className = 'chart-card';
+        agg.style.background = 'var(--bg-soft)';
+        agg.innerHTML = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><h3 style="margin:0;font-size:15px">Comparison Mode</h3></div>
+          <p class="text-sm text-muted">Showing <strong>${evIdx!==''?S(events[parseInt(evIdx)]?.title || ''):'Demo'}</strong> vs <strong>${S(events[parseInt(cmpIdx)]?.title || 'Demo')}</strong> side by side on each chart.</p>`;
+        right.appendChild(agg);
+      }
+
+      data.forEach((d, ci) => {
+        const cmpField = cmpData ? cmpData.find(cd => cd.label === d.label) : null;
+
+        if (d.type === 'select' && d.distribution) {
+          const card = document.createElement('div');
+          card.className = 'chart-card';
+          const labels = Object.keys(d.distribution), vals = Object.values(d.distribution);
+
+          let chartType = selectedChartType;
+          const isCircular = ['doughnut', 'pie', 'polarArea'].includes(chartType);
+          if (cmpField && isCircular) chartType = 'bar';
+          if (chartType === 'radar' && labels.length < 3) chartType = 'bar';
+
+          card.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+              <h3 style="margin:0">${FI[d.type]||'SEL'} ${S(d.label)}</h3>
+              <button class="btn-icon" onclick="exportChart('ch-${ci}')" title="Download as PNG" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px 8px;background:var(--bg);cursor:pointer;font-size:12px">PNG</button>
+            </div>
+            <div class="chart-canvas-wrap"><canvas id="ch-${ci}"></canvas></div>`;
+          right.appendChild(card);
+
+          const datasets = [{
+            label: cmpField ? (evIdx !== '' ? events[parseInt(evIdx)]?.title : 'Demo') : d.label,
+            data: vals, backgroundColor: GRAYS_ALPHA, borderColor: GRAYS, borderWidth: 1.5,
+            borderRadius: isCircular ? 0 : 6, tension: chartType === 'line' ? 0.4 : 0,
+            fill: chartType === 'line', pointRadius: chartType === 'line' ? 4 : 0, pointBackgroundColor: '#333'
+          }];
+
+          if (cmpField?.distribution) {
+            datasets.push({
+              label: events[parseInt(cmpIdx)]?.title || 'Compare',
+              data: labels.map(l => cmpField.distribution[l] || 0),
+              backgroundColor: GRAYS.map(c => c + '44'), borderColor: GRAYS.map(c => c + '88'),
+              borderWidth: 1.5, borderRadius: 6, tension: 0.4, fill: chartType === 'line',
+              pointRadius: chartType === 'line' ? 4 : 0, borderDash: chartType === 'line' ? [5, 5] : []
+            });
+          }
+
+          chartInstances['ch-' + ci] = new Chart(document.getElementById('ch-' + ci), {
+            type: chartType,
+            data: { labels, datasets },
+            options: {
+              responsive: true, maintainAspectRatio: false,
+              plugins: { legend: { position: 'bottom', labels: { font: { family: "'Inter',sans-serif", size: 12 }, padding: 12, color: '#525252' } } },
+              scales: isCircular || chartType === 'radar' ? {} : {
+                y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.06)' }, ticks: { font: { family: "'Inter',sans-serif" }, color: '#a1a1a1' } },
+                x: { grid: { display: false }, ticks: { font: { family: "'Inter',sans-serif" }, color: '#a1a1a1' } }
+              }
+            }
+          });
+
+        } else if (d.type === 'number' && d.entries?.length) {
+          const avg = (d.entries.reduce((a, b) => a + b, 0) / d.entries.length).toFixed(1);
+          const mn = Math.min(...d.entries), mx = Math.max(...d.entries);
+          const card = document.createElement('div');
+          card.className = 'chart-card';
+          const buckets = {};
+          d.entries.forEach(v => { const b = Math.floor(v / 5) * 5; buckets[`${b} to ${b+4}`] = (buckets[`${b} to ${b+4}`] || 0) + 1; });
+          const hlabels = Object.keys(buckets).sort((a, b) => parseInt(a) - parseInt(b));
+          const hvals = hlabels.map(k => buckets[k]);
+          let numType = selectedChartType === 'line' ? 'line' : 'bar';
+
+          card.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+              <h3 style="margin:0">${FI[d.type]} ${S(d.label)} <span class="text-sm text-muted" style="font-weight:400">avg ${avg}, range ${mn} to ${mx}</span></h3>
+              <button class="btn-icon" onclick="exportChart('ch-${ci}')" title="Download as PNG" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px 8px;background:var(--bg);cursor:pointer;font-size:12px">PNG</button>
+            </div>
+            <div class="chart-canvas-wrap"><canvas id="ch-${ci}"></canvas></div>`;
+          right.appendChild(card);
+
+          chartInstances['ch-' + ci] = new Chart(document.getElementById('ch-' + ci), {
+            type: numType,
+            data: { labels: hlabels, datasets: [{ data: hvals, backgroundColor: '#555c', borderColor: '#555', borderWidth: 1.5, borderRadius: numType === 'bar' ? 6 : 0, tension: 0.4, fill: true, pointRadius: numType === 'line' ? 4 : 0, pointBackgroundColor: '#333' }] },
+            options: {
+              responsive: true, maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.06)' }, ticks: { font: { family: "'Inter',sans-serif" }, color: '#a1a1a1' } },
+                x: { grid: { display: false }, ticks: { font: { family: "'Inter',sans-serif" }, color: '#a1a1a1' } }
+              }
+            }
+          });
+        } else {
+          const card = document.createElement('div');
+          card.className = 'text-field-card';
+          card.innerHTML = `<h3>${FI[d.type] || 'TXT'} ${S(d.label)} <span class="text-sm text-muted" style="font-weight:400">${d.type}</span></h3>
+            <p class="text-field-note">Open ended field. Responses collected on submission. Export to Excel to review entries.</p>`;
+          right.appendChild(card);
+        }
+      });
+    }
+
+    function exportChart(id) {
+      const canvas = document.getElementById(id);
+      if (!canvas) return;
+      const link = document.createElement('a');
+      link.download = id + '_chart.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      App.toast('Chart downloaded!', 'success');
+    }
+
+    updateEvSel();
+    renderFieldList();
+    renderTemplates();
+    renderCharts();
+  </script>
+</body>
+</html>

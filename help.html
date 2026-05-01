@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Help | MyMeet</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/components.css">
+  <link rel="stylesheet" href="styles/pages.css">
+  <script>try{const p=JSON.parse(localStorage.getItem('mm_prefs')||'{}');if(p.theme==='dark'){document.documentElement.setAttribute('data-theme','dark');document.documentElement.style.background='#0a0a0a';}}catch(e){}</script>
+</head>
+<body>
+  <main class="container" style="padding-top:40px;padding-bottom:80px">
+
+    <div class="section-header animate-in">
+      <button class="back-btn" onclick="App.navigateTo('dashboard.html')">Back</button>
+      <h2>Help & Support</h2>
+    </div>
+
+    <div class="help-layout">
+      <div class="animate-in animate-in-delay-1">
+        <div class="help-sidebar" style="margin-bottom:16px">
+          <h3>Quick Questions</h3>
+          <div class="quick-chips">
+            <button class="quick-chip" onclick="sendChip(this)">How do I create an event?</button>
+            <button class="quick-chip" onclick="sendChip(this)">How do Google Meet links work?</button>
+            <button class="quick-chip" onclick="sendChip(this)">How does the map work?</button>
+            <button class="quick-chip" onclick="sendChip(this)">How do I export to Excel?</button>
+            <button class="quick-chip" onclick="sendChip(this)">How do custom analytics work?</button>
+            <button class="quick-chip" onclick="sendChip(this)">What are the presets?</button>
+            <button class="quick-chip" onclick="sendChip(this)">Who can view my slides?</button>
+            <button class="quick-chip" onclick="sendChip(this)">What is MyMeet?</button>
+            <button class="quick-chip" onclick="sendChip(this)">How do keyboard shortcuts work?</button>
+            <button class="quick-chip" onclick="sendChip(this)">Can I backup my data?</button>
+          </div>
+        </div>
+
+        <div class="shortcuts-panel">
+          <h4 style="margin-bottom:12px">Keyboard Shortcuts</h4>
+          <div class="shortcut-row"><span class="shortcut-label">Dashboard</span><kbd>D</kbd></div>
+          <div class="shortcut-row"><span class="shortcut-label">New Event</span><kbd>N</kbd></div>
+          <div class="shortcut-row"><span class="shortcut-label">Events</span><kbd>E</kbd></div>
+          <div class="shortcut-row"><span class="shortcut-label">Analytics</span><kbd>A</kbd></div>
+          <div class="shortcut-row"><span class="shortcut-label">Help</span><kbd>H</kbd></div>
+          <div class="shortcut-row"><span class="shortcut-label">Show All Shortcuts</span><kbd>?</kbd></div>
+        </div>
+      </div>
+
+      <div class="chat-box animate-in animate-in-delay-2">
+        <div class="chat-messages" id="chat-messages">
+          <div class="chat-msg bot">Hey there! I'm the MyMeet assistant. Ask me anything or tap a quick question on the left. I'm here to help you get the most out of the platform.</div>
+        </div>
+        <div class="chat-input-row">
+          <input class="form-input" id="chat-input" placeholder="Ask a question..." type="text" onkeydown="if(event.key==='Enter')sendChat()">
+          <button class="chat-send-btn" onclick="sendChat()">Send</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="scripts/storage.js"></script>
+  <script src="scripts/app.js"></script>
+  <script>
+    App.init('help');
+
+    const ANSWERS = {
+      'what is mymeet': "MyMeet is basically your one stop shop for running career fairs and events. You can set up events with Google Meet links or physical venues, generate QR codes for check ins, build custom analytics to understand your audience, and export everything to Excel when you need to report to stakeholders. All your data stays right in your browser, no accounts needed.",
+
+      'create an event': "Super easy! Head to the Dashboard and click 'Create Event'. You'll go through a quick 4 step wizard:\n\n1. Fill in the basics: title, date, and pick online or in person\n2. Add any resource links your attendees might need\n3. Generate QR codes for check ins, surveys, etc.\n4. Upload your slides (they're host locked for security)\n\nThe whole thing takes about 2 to 3 minutes.",
+
+      'zoom': "When you're setting up an event, choose 'Online (Google Meet)' as your location type. Enter your Google Meet code (the 10 letter code from the invite), and MyMeet will format it automatically and generate a shareable link. You can copy it or open it directly. Pretty handy for sending out in emails or calendar invites.",
+      'meet': "When you're setting up an event, choose 'Online (Google Meet)' as your location type. Enter your Google Meet code (the 10 letter code from the invite), and MyMeet will format it automatically and generate a shareable link. You can copy it or open it directly. Pretty handy for sending out in emails or calendar invites.",
+
+      'map': "If you're doing an in person event, switch to 'In Person' mode in the create wizard. Start typing a venue name in the search box and you'll see suggestions pop up from OpenStreetMap. Pick one and the map updates instantly to show the exact location. Your attendees will get a direct Google Maps link too.",
+
+      'excel': "On the Events page, each event has an 'Excel' button. Click it and you'll get a properly formatted .xlsx file with four sheets: Event Details, Resources, QR Codes, and Analytics data. It's ready to drop into a presentation or send to your team.",
+
+      'custom analytic': "The Analytics section has a field builder on the left side. You can add whatever data points you want to track: things like degree level, company name, email, etc. Pick from text, dropdown, number, email, or phone types. For dropdowns, you define the options (like Bachelors, Masters, PhD). Charts pop up automatically on the right side based on your fields.",
+
+      'preset': "Presets are pre built field collections to save you time:\n\nUniversity: degree, year, major, age group, nationality\nCorporate: company, job title, industry, company size, contact info\nStartup: role, funding stage, vertical, email, LinkedIn\nNetworking: name, email, phone, profession, interests\n\nJust click one and all the fields get added instantly. You can always tweak them after.",
+
+      'slides': "In the last step of event creation, you can upload PDF or PowerPoint files. Here's the cool part: they're host locked. That means attendees only see a blurred preview and have to request access from you. You stay in control of when and how your content gets shared.",
+
+      'qr': "During event setup (Step 3), enter any URL and give it a label, then hit Generate. You can create up to 6 QR codes per event. They're great for things like check in forms, feedback surveys, LinkedIn profiles, or sign up pages. Attendees just scan and go.",
+
+      'keyboard': "You can navigate around MyMeet without touching your mouse! Press D for Dashboard, N to create a new event, E for Events, A for Analytics, and H for Help. Press ? anytime to see all available shortcuts. It's a nice time saver once you get used to it.",
+
+      'backup': "Absolutely! On your Dashboard, there's an 'Export Backup' button at the bottom. It downloads all your events, analytics fields, and templates as a single file. If you ever need to restore, just use the 'Import' button and pick that file. Handy if you're switching browsers or want a safety net.",
+
+      'default': "Hmm, I'm not 100% sure about that one. But here's what I can help with: creating events, Google Meet setup, Google Maps integration, QR codes, custom analytics, Excel exports, slide management, keyboard shortcuts, and data backups. Want to know about any of those?"
+    };
+
+    function sendChip(btn) {
+      document.getElementById('chat-input').value = btn.textContent;
+      sendChat();
+    }
+
+    function sendChat() {
+      const input = document.getElementById('chat-input');
+      const q = input.value.trim();
+      if (!q) return;
+      appendChat(q, 'user');
+      input.value = '';
+      const key = Object.keys(ANSWERS).find(k => q.toLowerCase().includes(k));
+      setTimeout(() => appendChat(ANSWERS[key || 'default'], 'bot'), 300 + Math.random() * 400);
+    }
+
+    function appendChat(text, role) {
+      const msgs = document.getElementById('chat-messages');
+      const d = document.createElement('div');
+      d.className = 'chat-msg ' + role;
+      if (role === 'bot') {
+        d.innerHTML = Storage.sanitize(text).replace(/\n/g, '<br>');
+      } else {
+        d.textContent = text;
+      }
+      msgs.appendChild(d);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+  </script>
+</body>
+</html>

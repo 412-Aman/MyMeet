@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Dashboard | MyMeet</title>
+  <meta name="description" content="Your MyMeet command center. Create events, view analytics, and manage career fairs.">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/components.css">
+  <link rel="stylesheet" href="styles/pages.css">
+  <script>try{const p=JSON.parse(localStorage.getItem('mm_prefs')||'{}');if(p.theme==='dark'){document.documentElement.setAttribute('data-theme','dark');document.documentElement.style.background='#0a0a0a';}}catch(e){}</script>
+</head>
+<body>
+  <main class="container" style="padding-top:40px;padding-bottom:80px">
+
+    <!-- Hero -->
+    <div class="dash-hero animate-in">
+      <div class="dash-hero-inner">
+        <h2>Welcome back</h2>
+        <p>Everything you need to run world class career fairs.</p>
+        <div class="dash-hero-time" id="dash-time"></div>
+      </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="stats-row animate-in animate-in-delay-1" style="margin-bottom:28px">
+      <div class="stat-card">
+        <span class="snum" id="total-events">0</span>
+        <span class="slbl">Events</span>
+      </div>
+      <div class="stat-card">
+        <span class="snum" id="total-qr">0</span>
+        <span class="slbl">QR Codes</span>
+      </div>
+      <div class="stat-card">
+        <span class="snum" id="total-fields">0</span>
+        <span class="slbl">Analytics Fields</span>
+      </div>
+    </div>
+
+    <!-- Action Cards -->
+    <div class="dash-grid">
+      <a href="create.html" class="dash-card card-hover animate-in animate-in-delay-1">
+        <div class="card-icon" style="font-family:var(--font-display);font-weight:800;font-size:18px">CE</div>
+        <h3>Create Event</h3>
+        <p>Set up a new career fair or meeting in minutes with our guided wizard.</p>
+      </a>
+      <a href="events.html" class="dash-card card-hover animate-in animate-in-delay-2">
+        <div class="card-icon" style="font-family:var(--font-display);font-weight:800;font-size:18px">EV</div>
+        <h3>My Events</h3>
+        <p>View, manage, edit, and export all your created events from one place.</p>
+      </a>
+      <a href="analytics.html" class="dash-card card-hover animate-in animate-in-delay-3">
+        <div class="card-icon" style="font-family:var(--font-display);font-weight:800;font-size:18px">AN</div>
+        <h3>Analytics</h3>
+        <p>Customize your analytics fields and visualize audience data in real time.</p>
+      </a>
+      <a href="help.html" class="dash-card card-hover animate-in animate-in-delay-4">
+        <div class="card-icon" style="font-family:var(--font-display);font-weight:800;font-size:18px">HS</div>
+        <h3>Help & Support</h3>
+        <p>Ask the MyMeet assistant anything about features and getting started.</p>
+      </a>
+    </div>
+
+    <!-- Data Management -->
+    <div class="card" style="margin-top:28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px" id="data-bar">
+      <div>
+        <h4 style="margin-bottom:2px">Your Data</h4>
+        <p class="text-sm text-muted">Storage: <span id="storage-pct">0</span>% used · All data stored locally in your browser</p>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary btn-sm" onclick="Storage.downloadExport()">Export Backup</button>
+        <button class="btn btn-ghost btn-sm" onclick="Storage.triggerImport()">Import</button>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="scripts/storage.js"></script>
+  <script src="scripts/app.js"></script>
+  <script>
+    App.init('dashboard');
+
+    // Populate stats
+    const events = Storage.getEvents();
+    const fields = Storage.getFields();
+    document.getElementById('total-events').textContent = events.length;
+    document.getElementById('total-qr').textContent = events.reduce((a, e) => a + (e.qrCodes || []).length, 0);
+    document.getElementById('total-fields').textContent = fields.length;
+    document.getElementById('storage-pct').textContent = Storage.getStoragePct();
+
+    // Live clock
+    function updateTime() {
+      const el = document.getElementById('dash-time');
+      if (el) el.textContent = App.formatTime();
+    }
+    updateTime();
+    setInterval(updateTime, 1000);
+
+    // Dashboard card navigation with transitions
+    document.querySelectorAll('.dash-card').forEach(card => {
+      card.addEventListener('click', e => {
+        e.preventDefault();
+        App.navigateTo(card.getAttribute('href'));
+      });
+    });
+  </script>
+</body>
+</html>

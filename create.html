@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Create Event | MyMeet</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/components.css">
+  <link rel="stylesheet" href="styles/pages.css">
+  <script>try{const p=JSON.parse(localStorage.getItem('mm_prefs')||'{}');if(p.theme==='dark'){document.documentElement.setAttribute('data-theme','dark');document.documentElement.style.background='#0a0a0a';}}catch(e){}</script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU" crossorigin="anonymous"></script>
+</head>
+<body>
+  <main class="container" style="padding-top:40px;padding-bottom:80px">
+
+    <div class="section-header animate-in">
+      <button class="back-btn" onclick="App.navigateTo('dashboard.html')">Back</button>
+      <h2>Create Event</h2>
+    </div>
+
+    <div class="wizard-steps animate-in animate-in-delay-1">
+      <div class="wizard-step active" id="ws-1"><div class="step-num">1</div><div class="step-label">Details</div></div>
+      <div class="wizard-step" id="ws-2"><div class="step-num">2</div><div class="step-label">Resources</div></div>
+      <div class="wizard-step" id="ws-3"><div class="step-num">3</div><div class="step-label">QR Codes</div></div>
+      <div class="wizard-step" id="ws-4"><div class="step-num">4</div><div class="step-label">Slides</div></div>
+    </div>
+
+    <!-- Step 1: Details -->
+    <div class="wizard-panel active" id="wp-1">
+      <div class="card" style="margin-bottom:16px">
+        <div class="form-group"><label class="form-label">Event Title *</label><input class="form-input" id="ev-title" placeholder="e.g. ASU Spring Career Fair 2025" type="text" maxlength="200"></div>
+        <div class="form-group"><label class="form-label">Date & Time *</label><input class="form-input" id="ev-date" type="datetime-local"></div>
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-input" id="ev-category">
+            <option value="">Select category...</option>
+            <option value="career-fair">Career Fair</option>
+            <option value="workshop">Workshop</option>
+            <option value="networking">Networking</option>
+            <option value="conference">Conference</option>
+            <option value="meetup">Meetup</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="ev-desc" placeholder="What's this event about? Who should attend?" maxlength="3000"></textarea></div>
+        <div class="form-group">
+          <label class="form-label">Location Type *</label>
+          <div class="location-toggle">
+            <button class="loc-tab active" id="tab-online" onclick="setLocType('online')">Online (Google Meet)</button>
+            <button class="loc-tab" id="tab-inperson" onclick="setLocType('inperson')">In Person</button>
+          </div>
+
+          <!-- Google Meet -->
+          <div class="location-panel active" id="loc-online">
+            <div class="zoom-box">
+              <div class="zoom-header"><div class="zoom-icon-wrap" style="font-family:var(--font-display);font-weight:800;font-size:11px">GM</div><div class="zoom-title">Google Meet Setup</div></div>
+              <div class="form-group" style="margin-bottom:14px">
+                <label class="form-label">Meeting Code *</label>
+                <input class="form-input" id="meet-code" placeholder="abc defg hij" type="text" oninput="formatMeetCode(this)" maxlength="14" style="font-family:'SF Mono',monospace;font-size:16px;letter-spacing:.05em">
+                <div class="form-hint">Enter the code from your Google Meet invite. It will auto format as you type.</div>
+              </div>
+              <button class="zoom-gen-btn" onclick="generateMeetLink()">Generate Meet Link</button>
+              <div class="zoom-result" id="meet-result">
+                <div class="zoom-link-text" id="meet-link-display"></div>
+                <div class="zoom-btns">
+                  <button class="btn btn-primary btn-sm" onclick="copyMeetLink()">Copy Link</button>
+                  <button class="btn btn-ghost btn-sm" onclick="openMeetLink()">Open in Browser</button>
+                </div>
+                <div class="zoom-note">Share this link with attendees via email, calendar invite, or any channel. No account required to join.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- In Person / Maps -->
+          <div class="location-panel" id="loc-inperson">
+            <div class="maps-box">
+              <div class="maps-search-row">
+                <span class="maps-search-icon">Search</span>
+                <input class="maps-input" id="maps-input" placeholder="Search any venue, address or city..." type="text" autocomplete="off" oninput="searchMaps(this.value)">
+                <div class="maps-dropdown" id="maps-dropdown"></div>
+              </div>
+              <iframe id="map-iframe" class="map-iframe" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d14000!2d-73.985!3d40.758!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sus!4v1"></iframe>
+              <div class="map-sel-bar" id="map-sel-bar">
+                <div class="sel-info"><div class="sel-name" id="sel-name"></div><div class="sel-addr" id="sel-addr"></div></div>
+                <a class="map-view-btn" id="map-view-link" href="#" target="_blank">View on Maps</a>
+              </div>
+            </div>
+            <input type="hidden" id="maps-place-name"><input type="hidden" id="maps-place-addr">
+            <input type="hidden" id="maps-lat"><input type="hidden" id="maps-lng">
+          </div>
+        </div>
+      </div>
+      <div class="wizard-nav"><div></div><button class="btn btn-primary" onclick="wizardNext(1)">Next</button></div>
+    </div>
+
+    <!-- Step 2: Resources -->
+    <div class="wizard-panel" id="wp-2">
+      <div class="card" style="margin-bottom:16px">
+        <h3 style="margin-bottom:4px">Resource Links</h3>
+        <p class="text-sm text-muted" style="margin-bottom:18px">Add links attendees might need: company sites, sign up forms, docs.</p>
+        <div class="resource-list" id="resource-list"></div>
+        <button class="add-btn" onclick="addResource()">+ Add Resource Link</button>
+      </div>
+      <div class="wizard-nav"><button class="btn btn-secondary" onclick="wizardPrev(2)">Back</button><button class="btn btn-primary" onclick="wizardNext(2)">Next</button></div>
+    </div>
+
+    <!-- Step 3: QR Codes -->
+    <div class="wizard-panel" id="wp-3">
+      <div class="card" style="margin-bottom:16px">
+        <h3 style="margin-bottom:4px">QR Code Generator</h3>
+        <p class="text-sm text-muted" style="margin-bottom:18px">Add URLs to generate QR codes attendees can scan on the day.</p>
+        <div class="qr-input-row">
+          <input class="form-input" id="qr-url" placeholder="https://yourlink.com" type="url">
+          <input class="form-input" id="qr-label" placeholder="Label" type="text" style="max-width:160px">
+          <button class="btn btn-primary" onclick="addQR()">Generate</button>
+        </div>
+        <div id="qr-preview"></div>
+      </div>
+      <div class="wizard-nav"><button class="btn btn-secondary" onclick="wizardPrev(3)">Back</button><button class="btn btn-primary" onclick="wizardNext(3)">Next</button></div>
+    </div>
+
+    <!-- Step 4: Slides -->
+    <div class="wizard-panel" id="wp-4">
+      <div class="card" style="margin-bottom:16px">
+        <h3 style="margin-bottom:4px">Upload Slides</h3>
+        <p class="text-sm text-muted" style="margin-bottom:18px">Host locked: attendees see a blurred preview only.</p>
+        <div style="border:2px dashed var(--border);border-radius:var(--radius);padding:40px;text-align:center;cursor:pointer;transition:all var(--dur-fast)" onclick="document.getElementById('slide-file').click()" ondragover="event.preventDefault();this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border)'" ondrop="handleDrop(event);this.style.borderColor='var(--border)'">
+          <div style="font-size:32px;margin-bottom:12px;font-family:var(--font-display);font-weight:800">SL</div>
+          <div style="font-weight:600;margin-bottom:4px">Drop slides here or click to browse</div>
+          <div class="text-sm text-muted">PDF, PPT, PPTX accepted</div>
+          <input type="file" id="slide-file" style="display:none" accept=".pdf,.ppt,.pptx" onchange="handleFileSelect(event)">
+        </div>
+        <div id="slide-name" style="margin-top:12px;font-size:14px;color:var(--success);font-weight:600;display:none"></div>
+        <div style="background:var(--bg-soft);border-radius:var(--radius-sm);padding:14px;margin-top:16px;font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:10px">
+          <span style="font-family:var(--font-display);font-weight:800;font-size:11px">LK</span> <span>Slides are <strong>host locked</strong>: attendees see a blurred preview with a request access prompt.</span>
+        </div>
+      </div>
+      <div class="wizard-nav"><button class="btn btn-secondary" onclick="wizardPrev(4)">Back</button><button class="btn btn-primary btn-lg" onclick="finalizeEvent()" style="background:var(--success)">Create Event</button></div>
+    </div>
+  </main>
+
+  <script src="scripts/storage.js"></script>
+  <script src="scripts/app.js"></script>
+  <script>
+    App.init('create');
+    let qrCodes = [], locType = 'online', meetLink = '';
+    const S = Storage.sanitize;
+
+    function goToStep(n) {
+      for (let i = 1; i <= 4; i++) {
+        document.getElementById('wp-' + i).classList.toggle('active', i === n);
+        const ws = document.getElementById('ws-' + i);
+        ws.classList.remove('active', 'done');
+        if (i < n) ws.classList.add('done'); else if (i === n) ws.classList.add('active');
+      }
+      window.scrollTo(0, 0);
+    }
+    function wizardNext(step) {
+      if (step === 1) {
+        if (!document.getElementById('ev-title').value.trim()) { App.toast('Please enter an event title', 'error'); return; }
+        if (!document.getElementById('ev-date').value) { App.toast('Please select a date', 'error'); return; }
+        if (locType === 'online' && !document.getElementById('meet-code').value.trim()) { App.toast('Please enter a Google Meet code', 'error'); return; }
+        if (locType === 'inperson' && !document.getElementById('maps-place-name').value) { App.toast('Please select a location from the map', 'error'); return; }
+      }
+      goToStep(step + 1);
+    }
+    function wizardPrev(step) { goToStep(step - 1); }
+
+    function setLocType(type) {
+      locType = type;
+      document.getElementById('tab-online').classList.toggle('active', type === 'online');
+      document.getElementById('tab-inperson').classList.toggle('active', type === 'inperson');
+      document.getElementById('loc-online').classList.toggle('active', type === 'online');
+      document.getElementById('loc-inperson').classList.toggle('active', type === 'inperson');
+    }
+
+    /* ─── Google Meet ─── */
+    function formatMeetCode(input) {
+      let val = input.value.replace(/[^a-zA-Z]/g, '').toLowerCase();
+      if (val.length > 10) val = val.slice(0, 10);
+      let formatted = '';
+      for (let i = 0; i < val.length; i++) {
+        if (i === 3 || i === 7) formatted += ' ';
+        formatted += val[i];
+      }
+      input.value = formatted;
+    }
+
+    function generateMeetLink() {
+      const raw = document.getElementById('meet-code').value.replace(/\s/g, '');
+      if (!raw || raw.length < 10) { App.toast('Enter a valid meeting code (10 characters)', 'error'); return; }
+      const code = raw.slice(0,3) + '-' + raw.slice(3,7) + '-' + raw.slice(7,10);
+      meetLink = `https://meet.google.com/${code}`;
+      document.getElementById('meet-link-display').textContent = meetLink;
+      document.getElementById('meet-result').style.display = 'block';
+      App.toast('Meet link generated!', 'success');
+    }
+    function copyMeetLink() { navigator.clipboard.writeText(meetLink).then(() => App.toast('Link copied!', 'success')); }
+    function openMeetLink() { if (meetLink) window.open(meetLink, '_blank'); }
+
+    /* ─── Maps Search (Nominatim) ─── */
+    let mapsTimer = null;
+    const LOCAL_PLACES = [
+      { name: 'Marina Bay Sands', address: '10 Bayfront Ave, Singapore', lat: 1.2834, lng: 103.8607 },
+      { name: 'National University of Singapore', address: '21 Lower Kent Ridge Rd, Singapore', lat: 1.2966, lng: 103.7764 },
+      { name: 'ASU W.P. Carey School of Business', address: '300 E Lemon St, Tempe, AZ', lat: 33.4185, lng: -111.934 },
+      { name: 'Suntec Convention Centre', address: '1 Raffles Blvd, Singapore', lat: 1.2935, lng: 103.8577 },
+      { name: 'Singapore Expo', address: '1 Expo Dr, Singapore', lat: 1.3346, lng: 103.9614 },
+    ];
+
+    async function searchMaps(val) {
+      clearTimeout(mapsTimer);
+      const dd = document.getElementById('maps-dropdown');
+      if (!val || val.length < 2) { dd.style.display = 'none'; return; }
+      mapsTimer = setTimeout(async () => {
+        const local = LOCAL_PLACES.filter(p =>
+          p.name.toLowerCase().includes(val.toLowerCase()) ||
+          p.address.toLowerCase().includes(val.toLowerCase())
+        );
+        let remote = [];
+        try {
+          const resp = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&addressdetails=1&limit=5`, { headers: { 'Accept-Language': 'en' } });
+          const data = await resp.json();
+          remote = data.map(r => ({ name: r.display_name.split(',')[0], address: r.display_name, lat: parseFloat(r.lat), lng: parseFloat(r.lon) }));
+        } catch (e) {}
+        const all = [...local];
+        remote.forEach(r => { if (!all.some(a => Math.abs(a.lat - r.lat) < 0.001)) all.push(r); });
+        if (!all.length) { dd.style.display = 'none'; return; }
+        dd.innerHTML = all.slice(0, 8).map((p) => `
+          <div class="maps-result" onclick='selectPlaceData(${JSON.stringify(p).replace(/'/g, "\\'")})'>
+            <span class="pin">Pin</span>
+            <div><span class="r-name">${S(p.name)}</span><span class="r-addr">${S(p.address)}</span></div>
+          </div>`).join('');
+        dd.style.display = 'block';
+      }, 300);
+    }
+
+    function selectPlaceData(p) {
+      document.getElementById('maps-input').value = p.name;
+      document.getElementById('maps-dropdown').style.display = 'none';
+      document.getElementById('maps-place-name').value = p.name;
+      document.getElementById('maps-place-addr').value = p.address;
+      document.getElementById('maps-lat').value = p.lat;
+      document.getElementById('maps-lng').value = p.lng;
+      const q = encodeURIComponent(`${p.lat},${p.lng}`);
+      document.getElementById('map-iframe').src = `https://www.google.com/maps?q=${q}&output=embed&z=16`;
+      document.getElementById('sel-name').textContent = p.name;
+      document.getElementById('sel-addr').textContent = p.address;
+      document.getElementById('map-sel-bar').style.display = 'flex';
+      document.getElementById('map-view-link').href = `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`;
+      App.toast('Location pinned on map!', 'success');
+    }
+
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.maps-search-row')) document.getElementById('maps-dropdown').style.display = 'none';
+    });
+
+    /* ─── Resources (drag reorder) ─── */
+    function addResource() {
+      const list = document.getElementById('resource-list');
+      if (list.children.length >= 10) { App.toast('Max 10 resources', 'error'); return; }
+      const row = document.createElement('div');
+      row.className = 'resource-item';
+      row.setAttribute('draggable', 'true');
+      row.setAttribute('data-drag-idx', list.children.length);
+      row.innerHTML = `<span class="drag-handle" title="Drag to reorder">::</span><input class="form-input" placeholder="Label" type="text" style="max-width:180px"><input class="form-input" placeholder="https://..." type="url"><button class="remove-btn" onclick="this.parentElement.remove();reindexResources()">x</button>`;
+      list.appendChild(row);
+    }
+    function reindexResources() {
+      document.querySelectorAll('#resource-list .resource-item').forEach((r, i) => r.setAttribute('data-drag-idx', i));
+    }
+    setTimeout(() => {
+      App.initDragReorder(document.getElementById('resource-list'), (from, to) => {
+        const list = document.getElementById('resource-list');
+        const items = [...list.children];
+        const el = items[from];
+        if (from < to) list.insertBefore(el, items[to].nextSibling);
+        else list.insertBefore(el, items[to]);
+        reindexResources();
+      });
+    }, 100);
+
+    /* ─── QR Codes ─── */
+    function addQR() {
+      const url = document.getElementById('qr-url').value.trim();
+      const label = document.getElementById('qr-label').value.trim() || url;
+      if (!url) { App.toast('Enter a URL', 'error'); return; }
+      const v = Storage.validate(url, 'url');
+      if (!v.valid) { App.toast(v.msg, 'error'); return; }
+      if (qrCodes.length >= 6) { App.toast('Max 6 QR codes', 'error'); return; }
+      const preview = document.getElementById('qr-preview');
+      const wrap = document.createElement('div'); wrap.className = 'qr-item';
+      const qrDiv = document.createElement('div'); qrDiv.id = 'qr-' + Date.now();
+      wrap.innerHTML = `<div style="font-size:12px;font-weight:600;margin-bottom:10px">${S(label)}</div>`;
+      wrap.appendChild(qrDiv); preview.appendChild(wrap);
+      try { new QRCode(qrDiv, { text: url, width: 120, height: 120, colorDark: '#0a0a0a', colorLight: '#ffffff' }); } catch(e) {}
+      qrCodes.push({ url, label });
+      document.getElementById('qr-url').value = ''; document.getElementById('qr-label').value = '';
+      App.toast('QR generated!', 'success');
+    }
+
+    /* ─── Slides ─── */
+    let slideFile = null;
+    function handleFileSelect(e) { const f = e.target.files[0]; if (!f) return; slideFile = f; const n = document.getElementById('slide-name'); n.textContent = 'Uploaded: ' + f.name; n.style.display = 'block'; App.toast('Slides uploaded', 'success'); }
+    function handleDrop(e) { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleFileSelect({ target: { files: [f] } }); }
+
+    /* ─── Finalize ─── */
+    function finalizeEvent() {
+      const title = document.getElementById('ev-title').value.trim();
+      const date = document.getElementById('ev-date').value;
+      const desc = document.getElementById('ev-desc').value.trim();
+      const category = document.getElementById('ev-category').value;
+      const resources = [];
+      document.querySelectorAll('#resource-list .resource-item').forEach(row => {
+        const ins = row.querySelectorAll('input');
+        if (ins[1]?.value.trim()) resources.push({ label: ins[0].value.trim() || ins[1].value.trim(), url: ins[1].value.trim() });
+      });
+      let location = {};
+      if (locType === 'online') {
+        const code = document.getElementById('meet-code').value.replace(/\s/g, '');
+        location = { type: 'online', meetCode: code, meetLink };
+      } else {
+        location = { type: 'inperson', name: document.getElementById('maps-place-name').value, address: document.getElementById('maps-place-addr').value, lat: parseFloat(document.getElementById('maps-lat').value), lng: parseFloat(document.getElementById('maps-lng').value) };
+      }
+      const fields = Storage.getFields();
+      const ev = { id: Date.now(), title, date, desc, category, location, resources, qrCodes: [...qrCodes], slideName: slideFile?.name || null, created: new Date().toISOString(), fieldsSnapshot: JSON.parse(JSON.stringify(fields)), mockData: Storage.genMock(fields) };
+      Storage.addEvent(ev);
+      App.confetti();
+      App.toast('"' + title + '" created!', 'success');
+      setTimeout(() => App.navigateTo('events.html'), 800);
+    }
+
+    addResource();
+  </script>
+</body>
+</html>

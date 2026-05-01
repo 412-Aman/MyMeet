@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Attendee Form | MyMeet</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/components.css">
+  <link rel="stylesheet" href="styles/pages.css">
+  <script>try{const p=JSON.parse(localStorage.getItem('mm_prefs')||'{}');if(p.theme==='dark'){document.documentElement.setAttribute('data-theme','dark');document.documentElement.style.background='#0a0a0a';}}catch(e){}</script>
+</head>
+<body>
+<script>document.addEventListener('DOMContentLoaded',()=>document.body.classList.add('page-ready'));</script>
+  <div class="form-page" id="form-page">
+    <!-- Populated by JS -->
+  </div>
+
+  <div class="toast-container" id="toasts"></div>
+
+  <script src="scripts/storage.js"></script>
+  <script>
+    // Lightweight toast (no full app shell needed)
+    const S = Storage.sanitize;
+
+    function toast(msg, type = '') {
+      const c = document.getElementById('toasts');
+      const t = document.createElement('div');
+      t.className = 'toast ' + type;
+      t.textContent = msg;
+      c.appendChild(t);
+      setTimeout(() => t.remove(), 3000);
+    }
+
+    const params = new URLSearchParams(location.search);
+    const eventId = parseInt(params.get('eid'));
+    const ev = Storage.getEvent(eventId);
+    const page = document.getElementById('form-page');
+
+    if (!ev) {
+      page.innerHTML = `
+        <div class="form-hero">
+          <h1>Form Not Found</h1>
+          <p>This event form isn't available. It may have been deleted or the link is incorrect.</p>
+          <a href="events.html" class="btn btn-primary" style="margin-top:16px">Back to Events</a>
+        </div>`;
+    } else {
+      const fields = ev.fieldsSnapshot?.length ? ev.fieldsSnapshot : Storage.getFields();
+      const dateStr = ev.date ? new Date(ev.date).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '';
+
+      if (!fields.length) {
+        page.innerHTML = `
+          <div class="form-hero">
+            <h1>${S(ev.title)}</h1>
+            <p>No form fields have been set up for this event yet.</p>
+            <a href="event-detail.html?id=${eventId}" class="btn btn-secondary" style="margin-top:16px">Back to Event</a>
+          </div>`;
+      } else {
+        page.innerHTML = `
+          <div class="form-hero">
+            <div style="margin-bottom:20px">
+              <img src="background_removed.png" alt="MyMeet" style="height:36px;width:auto;display:block">
+            </div>
+            <h1>${S(ev.title)}</h1>
+            <p>${S(dateStr)}${ev.location?.type === 'inperson' ? ' · ' + S(ev.location.name || '') : ''}</p>
+            ${ev.desc ? `<p style="margin-top:8px;font-size:14px;color:var(--text-soft)">${S(ev.desc)}</p>` : ''}
+          </div>
+
+          <div class="card">
+            <h3 style="margin-bottom:4px">Attendee Information</h3>
+            <p class="text-sm text-muted" style="margin-bottom:24px">Please fill out the form below. All fields are required.</p>
+
+            <form id="attendee-form" onsubmit="submitForm(event)">
+              ${fields.map((f, i) => `
+                <div class="form-group">
+                  <label class="form-label">${S(f.name)}</label>
+                  ${f.type === 'select' ? `
+                    <select class="form-input" name="field_${i}" required>
+                      <option value="">Select...</option>
+                      ${(f.options || []).map(o => `<option value="${S(o)}">${S(o)}</option>`).join('')}
+                    </select>
+                  ` : f.type === 'email' ? `
+                    <input class="form-input" name="field_${i}" type="email" placeholder="your@email.com" required>
+                  ` : f.type === 'phone' ? `
+                    <input class="form-input" name="field_${i}" type="tel" placeholder="+1 (555) 123 4567" required>
+                  ` : f.type === 'number' ? `
+                    <input class="form-input" name="field_${i}" type="number" placeholder="Enter a number" required>
+                  ` : `
+                    <input class="form-input" name="field_${i}" type="text" placeholder="Enter ${S(f.name.toLowerCase())}" required maxlength="500">
+                  `}
+                </div>
+              `).join('')}
+
+              <div class="form-submit-area">
+                <button type="submit" class="btn btn-primary btn-lg w-full">Submit Response</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Success state (hidden initially) -->
+          <div id="form-success" style="display:none">
+            <div class="card" style="text-align:center;padding:48px 32px">
+              <div style="font-size:36px;margin-bottom:16px;font-family:var(--font-display);font-weight:800">Done</div>
+              <h3 style="margin-bottom:8px">Thanks for your response!</h3>
+              <p class="text-muted">Your information has been recorded for ${S(ev.title)}.</p>
+              <button class="btn btn-secondary" style="margin-top:20px" onclick="resetForm()">Submit Another</button>
+            </div>
+          </div>
+
+          <div style="text-align:center;margin-top:24px">
+            <p class="text-xs text-muted">Powered by <strong>MyMeet</strong> · Career Fair Intelligence</p>
+          </div>
+        `;
+      }
+    }
+
+    function submitForm(e) {
+      e.preventDefault();
+      const form = document.getElementById('attendee-form');
+      const formData = new FormData(form);
+      const fields = ev.fieldsSnapshot?.length ? ev.fieldsSnapshot : Storage.getFields();
+      const response = {};
+      let hasError = false;
+
+      fields.forEach((f, i) => {
+        if (hasError) return;
+        let val = (formData.get('field_' + i) || '').trim();
+        // Enforce max length
+        if (val.length > 1000) { toast(f.name + ': Input too long (max 1000 chars)', 'error'); hasError = true; return; }
+        // Validate typed fields
+        if (f.type === 'email') {
+          const v = Storage.validate(val, 'email');
+          if (!v.valid) { toast(f.name + ': ' + v.msg, 'error'); hasError = true; return; }
+        }
+        if (f.type === 'phone') {
+          const v = Storage.validate(val, 'phone');
+          if (!v.valid) { toast(f.name + ': ' + v.msg, 'error'); hasError = true; return; }
+        }
+        if (f.type === 'select' && f.options?.length) {
+          if (!f.options.includes(val)) { toast(f.name + ': Invalid selection', 'error'); hasError = true; return; }
+        }
+        response[f.name] = val;
+      });
+
+      if (hasError) return;
+      if (Object.keys(response).length !== fields.length) return;
+
+      Storage.addResponse(eventId, response);
+      form.style.display = 'none';
+      document.querySelector('.card:first-of-type h3')?.parentElement?.parentElement && (
+        document.querySelector('.card').style.display = 'none'
+      );
+      document.getElementById('form-success').style.display = 'block';
+      toast('Response submitted!', 'success');
+    }
+
+    function resetForm() {
+      document.getElementById('attendee-form').reset();
+      document.querySelector('.card').style.display = 'block';
+      document.getElementById('attendee-form').style.display = 'block';
+      document.getElementById('form-success').style.display = 'none';
+    }
+  </script>
+</body>
+</html>

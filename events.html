@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>My Events | MyMeet</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/components.css">
+  <link rel="stylesheet" href="styles/pages.css">
+  <script>try{const p=JSON.parse(localStorage.getItem('mm_prefs')||'{}');if(p.theme==='dark'){document.documentElement.setAttribute('data-theme','dark');document.documentElement.style.background='#0a0a0a';}}catch(e){}</script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk" crossorigin="anonymous"></script>
+</head>
+<body>
+  <main class="container" style="padding-top:40px;padding-bottom:80px">
+
+    <div class="section-header animate-in">
+      <button class="back-btn" onclick="App.navigateTo('dashboard.html')">Back</button>
+      <h2>My Events</h2>
+      <div style="margin-left:auto;display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="App.navigateTo('create.html')">+ New Event</button>
+      </div>
+    </div>
+
+    <div class="events-toolbar animate-in animate-in-delay-1">
+      <div class="search-bar" style="flex:1;max-width:400px">
+        <span class="search-icon">Search</span>
+        <input type="text" id="search-input" placeholder="Search events..." oninput="renderEvents()">
+      </div>
+      <div class="category-chips" id="category-chips">
+        <button class="chip active" data-cat="" onclick="filterCat(this)">All</button>
+        <button class="chip" data-cat="career-fair" onclick="filterCat(this)">Career Fair</button>
+        <button class="chip" data-cat="workshop" onclick="filterCat(this)">Workshop</button>
+        <button class="chip" data-cat="networking" onclick="filterCat(this)">Networking</button>
+        <button class="chip" data-cat="conference" onclick="filterCat(this)">Conference</button>
+        <button class="chip" data-cat="meetup" onclick="filterCat(this)">Meetup</button>
+      </div>
+      <div class="view-toggle">
+        <button class="view-toggle-btn active" id="vt-list" onclick="setView('list')">List</button>
+        <button class="view-toggle-btn" id="vt-cal" onclick="setView('calendar')">Calendar</button>
+      </div>
+    </div>
+
+    <div id="undo-bar" class="card" style="display:none;margin-bottom:16px;background:var(--bg-inverse);color:var(--text-inv);justify-content:space-between;align-items:center;padding:14px 20px">
+      <span id="undo-text">Event deleted.</span>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,.2);color:#fff;border:none" onclick="undoDelete()">Undo</button>
+    </div>
+
+    <div id="events-list"></div>
+
+    <div id="calendar-view" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <button class="btn btn-ghost btn-sm" onclick="calNav(-1)">Prev</button>
+        <h3 id="cal-month-label" style="font-size:18px"></h3>
+        <button class="btn btn-ghost btn-sm" onclick="calNav(1)">Next</button>
+      </div>
+      <div id="cal-grid"></div>
+    </div>
+  </main>
+
+  <script src="scripts/storage.js"></script>
+  <script src="scripts/app.js"></script>
+  <script>
+    App.init('events');
+    let currentCat = '', currentView = 'list';
+    let calMonth = new Date().getMonth(), calYear = new Date().getFullYear();
+    let undoTimer = null;
+    const S = Storage.sanitize;
+
+    function renderEvents() {
+      const container = document.getElementById('events-list');
+      let events = Storage.getEvents();
+      const search = document.getElementById('search-input').value.toLowerCase();
+      if (currentCat) events = events.filter(e => e.category === currentCat);
+      if (search) events = events.filter(e =>
+        e.title.toLowerCase().includes(search) || (e.desc || '').toLowerCase().includes(search) || (e.location?.name || '').toLowerCase().includes(search)
+      );
+
+      if (!events.length) {
+        container.innerHTML = `<div class="empty-state">${App.EMPTY_SVGS.events}<h3>${search || currentCat ? 'No matches' : 'No events yet'}</h3><p>${search || currentCat ? 'Try a different search or filter.' : 'Create your first event to get started!'}</p>${!search && !currentCat ? '<a href="create.html" class="btn btn-primary" style="margin-top:8px">+ Create Event</a>' : ''}</div>`;
+        return;
+      }
+
+      const grays = ['#333', '#555', '#777', '#999', '#bbb'];
+      container.innerHTML = `<div class="events-grid">${events.map((ev, i) => {
+        const locLabel = ev.location?.type === 'online' ? 'Online' : S(ev.location?.name || 'In Person');
+        const dateStr = ev.date ? new Date(ev.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : 'No date';
+        const catLabel = ev.category ? ev.category.replace('-', ' ') : '';
+        const realIdx = Storage.getEvents().findIndex(e => e.id === ev.id);
+        return `
+          <div class="event-card" style="cursor:pointer" onclick="if(!event.target.closest('.event-actions'))App.navigateTo('event-detail.html?id=${ev.id}')">
+            <div class="event-color-bar" style="background:${grays[i % grays.length]}"></div>
+            <div class="event-info">
+              <h3>${S(ev.title)}</h3>
+              <div class="event-meta">
+                <span class="event-meta-item">${dateStr}</span>
+                <span class="event-meta-item">${locLabel}</span>
+                <span class="event-meta-item">${ev.resources?.length || 0} links</span>
+                <span class="event-meta-item">${ev.qrCodes?.length || 0} QR</span>
+                ${catLabel ? `<span class="badge badge-default">${S(catLabel)}</span>` : ''}
+              </div>
+            </div>
+            <div class="event-actions">
+              <button class="event-action-btn" onclick="event.stopPropagation();renameEvent(${realIdx})" title="Rename">Edit</button>
+              <button class="event-action-btn" onclick="event.stopPropagation();duplicateEvent(${realIdx})" title="Duplicate">Copy</button>
+              <button class="event-action-btn" onclick="event.stopPropagation();shareEvent(${realIdx})" title="Share">Share</button>
+              <div class="dropdown-wrap">
+                <button class="dropdown-trigger" onclick="event.stopPropagation();toggleDropdown(this)">Export</button>
+                <div class="dropdown-menu">
+                  <button class="dropdown-item" onclick="event.stopPropagation();exportExcel(${realIdx});closeDropdowns()"><span class="dd-label">Excel</span><span class="dd-hint">.xlsx</span></button>
+                  <button class="dropdown-item" onclick="event.stopPropagation();exportPDF(${realIdx});closeDropdowns()"><span class="dd-label">PDF</span><span class="dd-hint">.pdf</span></button>
+                  <button class="dropdown-item" onclick="event.stopPropagation();exportCSV(${realIdx});closeDropdowns()"><span class="dd-label">CSV</span><span class="dd-hint">.csv</span></button>
+                </div>
+              </div>
+              <button class="event-del-btn" onclick="event.stopPropagation();deleteEvent(${realIdx})" title="Delete">&times;</button>
+            </div>
+          </div>`;
+      }).join('')}</div>`;
+    }
+
+    /* Custom dropdown toggle */
+    function toggleDropdown(btn) {
+      const menu = btn.nextElementSibling;
+      const wasOpen = menu.classList.contains('open');
+      closeDropdowns();
+      if (!wasOpen) menu.classList.add('open');
+    }
+    function closeDropdowns() {
+      document.querySelectorAll('.dropdown-menu.open').forEach(m => m.classList.remove('open'));
+    }
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.dropdown-wrap')) closeDropdowns();
+    });
+
+    function filterCat(btn) {
+      currentCat = btn.dataset.cat;
+      document.querySelectorAll('.category-chips .chip').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      renderEvents();
+    }
+
+    function setView(v) {
+      currentView = v;
+      document.getElementById('vt-list').classList.toggle('active', v === 'list');
+      document.getElementById('vt-cal').classList.toggle('active', v === 'calendar');
+      document.getElementById('events-list').style.display = v === 'list' ? 'block' : 'none';
+      document.getElementById('calendar-view').style.display = v === 'calendar' ? 'block' : 'none';
+      if (v === 'calendar') renderCalendar();
+    }
+
+    function renderCalendar() {
+      const events = Storage.getEvents();
+      document.getElementById('cal-month-label').textContent = new Date(calYear, calMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      const firstDay = new Date(calYear, calMonth, 1).getDay();
+      const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+      const daysInPrev = new Date(calYear, calMonth, 0).getDate();
+      const today = new Date();
+      let html = '<div class="calendar-grid">';
+      ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d => { html += `<div class="cal-header">${d}</div>`; });
+      for (let i = firstDay - 1; i >= 0; i--) html += `<div class="cal-day other-month"><div class="cal-day-num">${daysInPrev - i}</div></div>`;
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const isToday = d === today.getDate() && calMonth === today.getMonth() && calYear === today.getFullYear();
+        const dayEvents = events.filter(e => e.date && e.date.startsWith(dateStr));
+        html += `<div class="cal-day ${isToday?'today':''}"><div class="cal-day-num">${d}</div>${dayEvents.map(e => `<div class="cal-event" onclick="App.navigateTo('event-detail.html?id=${e.id}')" title="${S(e.title)}">${S(e.title)}</div>`).join('')}</div>`;
+      }
+      const totalCells = firstDay + daysInMonth;
+      const rem = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+      for (let i = 1; i <= rem; i++) html += `<div class="cal-day other-month"><div class="cal-day-num">${i}</div></div>`;
+      html += '</div>';
+      document.getElementById('cal-grid').innerHTML = html;
+    }
+    function calNav(dir) { calMonth += dir; if (calMonth > 11) { calMonth = 0; calYear++; } if (calMonth < 0) { calMonth = 11; calYear--; } renderCalendar(); }
+
+    function renameEvent(idx) {
+      const events = Storage.getEvents();
+      App.promptModal({ title: 'Rename Event', value: events[idx].title, placeholder: 'Event name',
+        onConfirm: (v) => { Storage.updateEvent(events[idx].id, { title: v }); renderEvents(); App.toast('Renamed!', 'success'); }
+      });
+    }
+    function duplicateEvent(idx) { Storage.duplicateEvent(Storage.getEvents()[idx].id); renderEvents(); App.toast('Duplicated!', 'success'); }
+    function shareEvent(idx) {
+      const ev = Storage.getEvents()[idx];
+      const t = `${ev.title}\n${ev.date ? new Date(ev.date).toLocaleString('en-US') : 'TBD'}${ev.desc ? '\n\n' + ev.desc : ''}`;
+      if (navigator.share) navigator.share({ title: ev.title, text: t }); else { navigator.clipboard.writeText(t); App.toast('Copied to clipboard!', 'success'); }
+    }
+    function deleteEvent(idx) {
+      const ev = Storage.getEvents()[idx];
+      App.confirmModal({ title: 'Delete "' + ev.title + '"?', message: 'This will be moved to trash. You can undo for 30 seconds.', confirmText: 'Delete', danger: true,
+        onConfirm: () => { Storage.deleteEvent(ev.id); renderEvents(); showUndoBar(ev.title); }
+      });
+    }
+    function showUndoBar(title) {
+      clearTimeout(undoTimer);
+      document.getElementById('undo-text').textContent = '"' + title + '" deleted.';
+      document.getElementById('undo-bar').style.display = 'flex';
+      undoTimer = setTimeout(() => { document.getElementById('undo-bar').style.display = 'none'; }, 10000);
+    }
+    function undoDelete() {
+      const restored = Storage.undoDelete();
+      if (restored) { App.toast('"' + restored.title + '" restored!', 'success'); renderEvents(); }
+      document.getElementById('undo-bar').style.display = 'none'; clearTimeout(undoTimer);
+    }
+
+    /* ─── Excel Export ─── */
+    function exportExcel(idx) {
+      const ev = Storage.getEvents()[idx];
+      const wb = XLSX.utils.book_new();
+      const ws1 = XLSX.utils.aoa_to_sheet([
+        ['Field','Value'],['Title',ev.title],['Date',ev.date?new Date(ev.date).toLocaleString('en-US'):''],
+        ['Category',ev.category||''],['Description',ev.desc||''],['Location',ev.location?.type||''],
+        ev.location?.type==='online'?['Meet Link',ev.location?.meetLink||'']:['Venue',(ev.location?.name||'')+', '+(ev.location?.address||'')],
+        ['Resources',ev.resources?.length||0],['QR Codes',ev.qrCodes?.length||0],['Created',new Date(ev.created).toLocaleString('en-US')]
+      ]);
+      ws1['!cols']=[{wch:22},{wch:60}]; XLSX.utils.book_append_sheet(wb,ws1,'Event Details');
+      const ws2 = XLSX.utils.aoa_to_sheet([['Label','URL'],...(ev.resources||[]).map(r=>[r.label,r.url])]);
+      ws2['!cols']=[{wch:30},{wch:60}]; XLSX.utils.book_append_sheet(wb,ws2,'Resources');
+      const ws3 = XLSX.utils.aoa_to_sheet([['Label','URL'],...(ev.qrCodes||[]).map(q=>[q.label,q.url])]);
+      ws3['!cols']=[{wch:30},{wch:60}]; XLSX.utils.book_append_sheet(wb,ws3,'QR Codes');
+      if (ev.mockData) {
+        const rows=[['Field','Value/Distribution']];
+        ev.mockData.forEach(fd=>{rows.push(['']);rows.push([`== ${fd.label} ==`,'']);
+          if(fd.distribution)Object.entries(fd.distribution).forEach(([k,v])=>rows.push([k,v]));
+          else(fd.entries||[]).forEach(e=>rows.push(['',e]));
+        });
+        const ws4=XLSX.utils.aoa_to_sheet(rows);ws4['!cols']=[{wch:25},{wch:25}];XLSX.utils.book_append_sheet(wb,ws4,'Analytics');
+      }
+      XLSX.writeFile(wb, ev.title.replace(/[^a-z0-9]/gi,'_')+'_MyMeet.xlsx');
+      App.toast('Excel exported!', 'success');
+    }
+
+    /* ─── PDF Export ─── */
+    function exportPDF(idx) {
+      const ev = Storage.getEvents()[idx];
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const pageW = doc.internal.pageSize.getWidth();
+      let y = 20;
+      doc.setFontSize(22); doc.setFont(undefined, 'bold'); doc.text(ev.title, 14, y); y += 12;
+      doc.setFontSize(10); doc.setFont(undefined, 'normal'); doc.setTextColor(120);
+      doc.text('Generated by MyMeet on ' + new Date().toLocaleDateString(), 14, y); y += 12;
+      doc.setDrawColor(200); doc.line(14, y, pageW - 14, y); y += 10;
+      doc.setTextColor(0); doc.setFontSize(11);
+      const details = [
+        ['Date', ev.date ? new Date(ev.date).toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' }) : 'TBD'],
+        ['Category', ev.category ? ev.category.replace('-', ' ') : 'None'],
+        ['Location', ev.location?.type === 'online' ? 'Online (Google Meet)' : (ev.location?.name || 'In Person')],
+      ];
+      if (ev.location?.type === 'online' && ev.location.meetLink) details.push(['Meet Link', ev.location.meetLink]);
+      if (ev.location?.type !== 'online' && ev.location?.address) details.push(['Address', ev.location.address]);
+      if (ev.desc) details.push(['Description', ev.desc]);
+      doc.setFont(undefined, 'bold'); doc.text('Event Details', 14, y); y += 8;
+      doc.setFont(undefined, 'normal');
+      details.forEach(([k, v]) => {
+        doc.setFont(undefined, 'bold'); doc.text(k + ':', 14, y);
+        doc.setFont(undefined, 'normal');
+        const lines = doc.splitTextToSize(String(v), pageW - 65);
+        doc.text(lines, 50, y); y += lines.length * 5 + 3;
+        if (y > 270) { doc.addPage(); y = 20; }
+      });
+      y += 6;
+      if (ev.resources?.length) {
+        doc.setFont(undefined, 'bold'); doc.text('Resources (' + ev.resources.length + ')', 14, y); y += 7;
+        doc.setFont(undefined, 'normal');
+        ev.resources.forEach((r, i) => {
+          doc.text((i+1) + '. ' + r.label, 14, y);
+          doc.setTextColor(80, 80, 200); doc.text(r.url, 18, y + 5, { maxWidth: pageW - 32 }); doc.setTextColor(0);
+          y += 12; if (y > 270) { doc.addPage(); y = 20; }
+        });
+        y += 4;
+      }
+      if (ev.qrCodes?.length) {
+        doc.setFont(undefined, 'bold'); doc.text('QR Codes (' + ev.qrCodes.length + ')', 14, y); y += 7;
+        doc.setFont(undefined, 'normal');
+        ev.qrCodes.forEach((q, i) => { doc.text((i+1) + '. ' + q.label + ' : ' + q.url, 14, y); y += 6; if (y > 270) { doc.addPage(); y = 20; } });
+      }
+      doc.setFontSize(8); doc.setTextColor(150); doc.text('MyMeet Career Fair Intelligence Platform', 14, 290);
+      doc.save(ev.title.replace(/[^a-z0-9]/gi, '_') + '_MyMeet.pdf');
+      App.toast('PDF exported!', 'success');
+    }
+
+    /* ─── CSV Export ─── */
+    function exportCSV(idx) {
+      const ev = Storage.getEvents()[idx];
+      let csv = 'Field,Value\n';
+      csv += `Title,"${ev.title}"\n`;
+      csv += `Date,"${ev.date ? new Date(ev.date).toLocaleString('en-US') : ''}"\n`;
+      csv += `Category,"${ev.category || ''}"\n`;
+      csv += `Description,"${(ev.desc || '').replace(/"/g, '""')}"\n`;
+      csv += `Location Type,"${ev.location?.type || ''}"\n`;
+      if (ev.location?.type === 'online') csv += `Meet Link,"${ev.location?.meetLink || ''}"\n`;
+      else csv += `Venue,"${(ev.location?.name || '') + ', ' + (ev.location?.address || '')}"\n`;
+      csv += `\nResources\nLabel,URL\n`;
+      (ev.resources || []).forEach(r => { csv += `"${r.label}","${r.url}"\n`; });
+      csv += `\nQR Codes\nLabel,URL\n`;
+      (ev.qrCodes || []).forEach(q => { csv += `"${q.label}","${q.url}"\n`; });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = ev.title.replace(/[^a-z0-9]/gi, '_') + '_MyMeet.csv';
+      a.click(); URL.revokeObjectURL(url);
+      App.toast('CSV exported!', 'success');
+    }
+
+    renderEvents();
+  </script>
+</body>
+</html>
