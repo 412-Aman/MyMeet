@@ -17,7 +17,7 @@
   <main class="container" style="padding-top:40px;padding-bottom:80px">
 
     <div class="section-header animate-in">
-      <button class="back-btn" onclick="App.navigateTo('dashboard.html')">Back</button>
+      <button class="back-btn" onclick="App.navigateTo('dashboard.html')" aria-label="Back to Dashboard" title="Back to Dashboard"></button>
       <h2>My Events</h2>
       <div style="margin-left:auto;display:flex;gap:8px">
         <button class="btn btn-primary" onclick="App.navigateTo('create.html')">+ New Event</button>
@@ -91,7 +91,7 @@
         const realIdx = Storage.getEvents().findIndex(e => e.id === ev.id);
         return `
           <div class="event-card" style="cursor:pointer" onclick="if(!event.target.closest('.event-actions'))App.navigateTo('event-detail.html?id=${ev.id}')">
-            <div class="event-color-bar" style="background:${grays[i % grays.length]}"></div>
+            <div class="event-color-bar" style="background:${ev.location?.type === 'online' ? 'var(--accent)' : ev.location?.type === 'inperson' ? '#16a34a' : grays[i % grays.length]}"></div>
             <div class="event-info">
               <h3>${S(ev.title)}</h3>
               <div class="event-meta">

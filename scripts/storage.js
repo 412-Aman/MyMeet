@@ -122,6 +122,25 @@ const Storage = (() => {
   }
   function getAllResponses() { return get(KEYS.responses, {}); }
 
+  /**
+   * Returns responses for an event with the custom identifier value
+   * surfaced as the first entry in each response object.
+   */
+  function getResponsesWithIdentifier(eventId) {
+    const ev = getEvent(eventId);
+    const responses = getResponses(eventId);
+    if (!ev?.customIdentifier?.label) return responses;
+    const idLabel = ev.customIdentifier.label;
+    return responses.map(r => {
+      const { [idLabel]: idVal, submittedAt, ...rest } = r;
+      const ordered = {};
+      if (idVal !== undefined) ordered[idLabel] = idVal;
+      Object.assign(ordered, rest);
+      if (submittedAt !== undefined) ordered.submittedAt = submittedAt;
+      return ordered;
+    });
+  }
+
   /* ─── Onboarding ─── */
   function hasOnboarded() { return localStorage.getItem(KEYS.onboarded) === 'true'; }
   function setOnboarded() { localStorage.setItem(KEYS.onboarded, 'true'); }
@@ -222,6 +241,15 @@ const Storage = (() => {
           if (typeof ev.title !== 'string' || ev.title.length > 500) return { success: false, error: 'Event title invalid or too long' };
           if (ev.desc && typeof ev.desc !== 'string') ev.desc = '';
           if (ev.desc && ev.desc.length > 5000) ev.desc = ev.desc.slice(0, 5000);
+          // Sanitize customIdentifier
+          if (ev.customIdentifier) {
+            if (typeof ev.customIdentifier !== 'object') { ev.customIdentifier = null; }
+            else {
+              if (typeof ev.customIdentifier.label !== 'string') ev.customIdentifier.label = '';
+              ev.customIdentifier.label = ev.customIdentifier.label.slice(0, 100);
+              ev.customIdentifier.required = !!ev.customIdentifier.required;
+            }
+          }
         }
         setEvents(data.events);
       }
@@ -348,7 +376,7 @@ const Storage = (() => {
     getTrash, undoDelete, clearExpiredTrash,
     getFields, setFields, addField, removeField,
     getTemplates, saveTemplate, deleteTemplate, applyTemplate,
-    getResponses, addResponse, getAllResponses,
+    getResponses, addResponse, getAllResponses, getResponsesWithIdentifier,
     hasOnboarded, setOnboarded, resetOnboarding,
     getPrefs, setPref,
     validate,

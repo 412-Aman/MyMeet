@@ -15,7 +15,7 @@
   <main class="container" style="padding-top:40px;padding-bottom:80px">
 
     <div class="section-header animate-in">
-      <button class="back-btn" onclick="App.navigateTo('dashboard.html')">Back</button>
+      <button class="back-btn" onclick="App.navigateTo('dashboard.html')" aria-label="Back to Dashboard" title="Back to Dashboard"></button>
       <h2>Help & Support</h2>
     </div>
 
@@ -54,7 +54,12 @@
         </div>
         <div class="chat-input-row">
           <input class="form-input" id="chat-input" placeholder="Ask a question..." type="text" onkeydown="if(event.key==='Enter')sendChat()">
-          <button class="chat-send-btn" onclick="sendChat()">Send</button>
+          <button class="chat-send-btn" onclick="sendChat()" aria-label="Send message" title="Send message">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="14" y1="2" x2="6" y2="10"/>
+              <polygon points="14,2 9,14 6,10 2,7" fill="currentColor" stroke="none" opacity=".9"/>
+            </svg>
+          </button>
         </div>
       </div>
     </div>

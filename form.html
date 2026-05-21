@@ -3,17 +3,84 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>Attendee Form | MyMeet</title>
+  <meta name="description" content="Event check-in and registration form powered by MyMeet.">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="stylesheet" href="styles/base.css">
   <link rel="stylesheet" href="styles/components.css">
   <link rel="stylesheet" href="styles/pages.css">
   <script>try{const p=JSON.parse(localStorage.getItem('mm_prefs')||'{}');if(p.theme==='dark'){document.documentElement.setAttribute('data-theme','dark');document.documentElement.style.background='#0a0a0a';}}catch(e){}</script>
+  <style>
+    /* ── Identifier field highlight ── */
+    .identifier-field-wrap {
+      border: 2px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 16px 18px 14px;
+      margin-bottom: 20px;
+      background: color-mix(in srgb, var(--accent) 6%, transparent);
+      position: relative;
+    }
+    .identifier-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
+      border-radius: 99px;
+      padding: 3px 9px;
+      margin-bottom: 8px;
+    }
+    .identifier-badge::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: inline-block;
+    }
+    .form-page-wrap {
+      min-height: 100vh;
+      padding: 0 0 60px;
+    }
+    .form-hero {
+      padding: 40px 24px 28px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+    .form-hero h1 {
+      font-size: clamp(22px, 5vw, 32px);
+      font-weight: 800;
+      margin-bottom: 8px;
+      line-height: 1.2;
+    }
+    .form-body {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    .form-success-wrap {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    .success-icon {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--success) 15%, transparent);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 28px;
+    }
+  </style>
 </head>
 <body>
 <script>document.addEventListener('DOMContentLoaded',()=>document.body.classList.add('page-ready'));</script>
-  <div class="form-page" id="form-page">
+
+  <div class="form-page-wrap" id="form-page">
     <!-- Populated by JS -->
   </div>
 
@@ -21,7 +88,6 @@
 
   <script src="scripts/storage.js"></script>
   <script>
-    // Lightweight toast (no full app shell needed)
     const S = Storage.sanitize;
 
     function toast(msg, type = '') {
@@ -41,75 +107,113 @@
     if (!ev) {
       page.innerHTML = `
         <div class="form-hero">
+          <div style="margin-bottom:20px">
+            <img src="background_removed.png" alt="MyMeet" style="height:36px;width:auto;display:block;margin:0 auto">
+          </div>
           <h1>Form Not Found</h1>
-          <p>This event form isn't available. It may have been deleted or the link is incorrect.</p>
-          <a href="events.html" class="btn btn-primary" style="margin-top:16px">Back to Events</a>
+          <p style="color:var(--text-soft)">This event form isn't available. The link may be incorrect or the event was removed.</p>
         </div>`;
     } else {
       const fields = ev.fieldsSnapshot?.length ? ev.fieldsSnapshot : Storage.getFields();
       const dateStr = ev.date ? new Date(ev.date).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '';
+      const timeStr = ev.date ? new Date(ev.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '';
+      const hasIdentifier = ev.customIdentifier?.label;
 
-      if (!fields.length) {
+      if (!fields.length && !hasIdentifier) {
         page.innerHTML = `
           <div class="form-hero">
+            <div style="margin-bottom:20px"><img src="background_removed.png" alt="MyMeet" style="height:36px;width:auto;display:block;margin:0 auto"></div>
             <h1>${S(ev.title)}</h1>
             <p>No form fields have been set up for this event yet.</p>
-            <a href="event-detail.html?id=${eventId}" class="btn btn-secondary" style="margin-top:16px">Back to Event</a>
           </div>`;
       } else {
+        // Category label map
+        const catLabels = {
+          'career-fair': 'Career Fair', 'job-fair': 'Job Fair', 'workshop': 'Workshop',
+          'networking': 'Networking', 'conference': 'Conference', 'meetup': 'Meetup',
+          'school-club': 'School Club', 'corporate-event': 'Corporate Event',
+          'seminar': 'Seminar', 'hackathon': 'Hackathon', 'social': 'Social', 'other': 'Other'
+        };
+        const catLabel = ev.category ? (catLabels[ev.category] || ev.category) : '';
+
         page.innerHTML = `
           <div class="form-hero">
             <div style="margin-bottom:20px">
-              <img src="background_removed.png" alt="MyMeet" style="height:36px;width:auto;display:block">
+              <img src="background_removed.png" alt="MyMeet" style="height:36px;width:auto;display:block;margin:0 auto">
             </div>
+            ${catLabel ? `<div style="margin-bottom:10px"><span class="badge badge-default" style="font-size:11px">${S(catLabel)}</span></div>` : ''}
             <h1>${S(ev.title)}</h1>
-            <p>${S(dateStr)}${ev.location?.type === 'inperson' ? ' · ' + S(ev.location.name || '') : ''}</p>
-            ${ev.desc ? `<p style="margin-top:8px;font-size:14px;color:var(--text-soft)">${S(ev.desc)}</p>` : ''}
+            <p style="color:var(--text-soft);margin-top:6px">
+              ${dateStr ? S(dateStr) + (timeStr ? ' · ' + timeStr : '') : ''}
+              ${ev.location?.type === 'inperson' && ev.location.name ? ' · ' + S(ev.location.name) : ''}
+            </p>
+            ${ev.desc ? `<p style="margin-top:10px;font-size:14px;color:var(--text-muted);max-width:480px;margin-left:auto;margin-right:auto;line-height:1.6">${S(ev.desc)}</p>` : ''}
           </div>
 
-          <div class="card">
-            <h3 style="margin-bottom:4px">Attendee Information</h3>
-            <p class="text-sm text-muted" style="margin-bottom:24px">Please fill out the form below. All fields are required.</p>
+          <div class="form-body">
+            <div class="card">
+              <h3 style="margin-bottom:4px">Attendee Information</h3>
+              <p class="text-sm text-muted" style="margin-bottom:24px">Please fill out all required fields to complete your registration.</p>
 
-            <form id="attendee-form" onsubmit="submitForm(event)">
-              ${fields.map((f, i) => `
-                <div class="form-group">
-                  <label class="form-label">${S(f.name)}</label>
-                  ${f.type === 'select' ? `
-                    <select class="form-input" name="field_${i}" required>
-                      <option value="">Select...</option>
-                      ${(f.options || []).map(o => `<option value="${S(o)}">${S(o)}</option>`).join('')}
-                    </select>
-                  ` : f.type === 'email' ? `
-                    <input class="form-input" name="field_${i}" type="email" placeholder="your@email.com" required>
-                  ` : f.type === 'phone' ? `
-                    <input class="form-input" name="field_${i}" type="tel" placeholder="+1 (555) 123 4567" required>
-                  ` : f.type === 'number' ? `
-                    <input class="form-input" name="field_${i}" type="number" placeholder="Enter a number" required>
-                  ` : `
-                    <input class="form-input" name="field_${i}" type="text" placeholder="Enter ${S(f.name.toLowerCase())}" required maxlength="500">
-                  `}
+              <form id="attendee-form" onsubmit="submitForm(event)">
+
+                ${hasIdentifier ? `
+                  <div class="identifier-field-wrap">
+                    <div class="identifier-badge">Member Identifier</div>
+                    <label class="form-label" style="margin-bottom:8px">${S(ev.customIdentifier.label)}${ev.customIdentifier.required ? ' *' : ''}</label>
+                    <input
+                      class="form-input"
+                      name="identifier"
+                      type="text"
+                      placeholder="Enter your ${S(ev.customIdentifier.label.toLowerCase())}"
+                      ${ev.customIdentifier.required ? 'required' : ''}
+                      maxlength="200"
+                      autocomplete="off"
+                      style="font-family:'SF Mono',monospace;letter-spacing:.03em"
+                    >
+                  </div>
+                ` : ''}
+
+                ${fields.map((f, i) => `
+                  <div class="form-group">
+                    <label class="form-label">${S(f.name)} *</label>
+                    ${f.type === 'select' ? `
+                      <select class="form-input" name="field_${i}" required>
+                        <option value="">Select...</option>
+                        ${(f.options || []).map(o => `<option value="${S(o)}">${S(o)}</option>`).join('')}
+                      </select>
+                    ` : f.type === 'email' ? `
+                      <input class="form-input" name="field_${i}" type="email" placeholder="your@email.com" required>
+                    ` : f.type === 'phone' ? `
+                      <input class="form-input" name="field_${i}" type="tel" placeholder="+1 (555) 123 4567" required>
+                    ` : f.type === 'number' ? `
+                      <input class="form-input" name="field_${i}" type="number" placeholder="Enter a number" required>
+                    ` : `
+                      <input class="form-input" name="field_${i}" type="text" placeholder="Enter ${S(f.name.toLowerCase())}" required maxlength="500">
+                    `}
+                  </div>
+                `).join('')}
+
+                <div class="form-submit-area">
+                  <button type="submit" class="btn btn-primary btn-lg w-full" id="submit-btn">Submit Registration</button>
                 </div>
-              `).join('')}
-
-              <div class="form-submit-area">
-                <button type="submit" class="btn btn-primary btn-lg w-full">Submit Response</button>
-              </div>
-            </form>
-          </div>
-
-          <!-- Success state (hidden initially) -->
-          <div id="form-success" style="display:none">
-            <div class="card" style="text-align:center;padding:48px 32px">
-              <div style="font-size:36px;margin-bottom:16px;font-family:var(--font-display);font-weight:800">Done</div>
-              <h3 style="margin-bottom:8px">Thanks for your response!</h3>
-              <p class="text-muted">Your information has been recorded for ${S(ev.title)}.</p>
-              <button class="btn btn-secondary" style="margin-top:20px" onclick="resetForm()">Submit Another</button>
+              </form>
             </div>
-          </div>
 
-          <div style="text-align:center;margin-top:24px">
-            <p class="text-xs text-muted">Powered by <strong>MyMeet</strong> · Career Fair Intelligence</p>
+            <!-- Success state -->
+            <div id="form-success" style="display:none">
+              <div class="card" style="text-align:center;padding:48px 32px">
+                <div class="success-icon">✓</div>
+                <h3 style="margin-bottom:8px">You're registered!</h3>
+                <p class="text-muted">Your information has been recorded for <strong>${S(ev.title)}</strong>.</p>
+                ${hasIdentifier ? `<p class="text-sm text-muted" style="margin-top:8px" id="success-id-echo"></p>` : ''}
+                <button class="btn btn-secondary" style="margin-top:20px" onclick="resetForm()">Submit Another Response</button>
+              </div>
+            </div>
+
+            <div style="text-align:center;margin-top:24px;padding-bottom:12px">
+              <p class="text-xs text-muted">Powered by <strong>MyMeet</strong> · Career Fairs / Workshops / Meetups / School Clubs / Corporate Events</p>
+            </div>
           </div>
         `;
       }
@@ -123,12 +227,24 @@
       const response = {};
       let hasError = false;
 
+      // Handle custom identifier
+      if (ev.customIdentifier?.label) {
+        const idVal = (formData.get('identifier') || '').trim();
+        if (ev.customIdentifier.required && !idVal) {
+          toast(ev.customIdentifier.label + ' is required', 'error');
+          return;
+        }
+        if (idVal.length > 200) {
+          toast(ev.customIdentifier.label + ': Too long (max 200 chars)', 'error');
+          return;
+        }
+        response[ev.customIdentifier.label] = idVal;
+      }
+
       fields.forEach((f, i) => {
         if (hasError) return;
         let val = (formData.get('field_' + i) || '').trim();
-        // Enforce max length
         if (val.length > 1000) { toast(f.name + ': Input too long (max 1000 chars)', 'error'); hasError = true; return; }
-        // Validate typed fields
         if (f.type === 'email') {
           const v = Storage.validate(val, 'email');
           if (!v.valid) { toast(f.name + ': ' + v.msg, 'error'); hasError = true; return; }
@@ -144,21 +260,38 @@
       });
 
       if (hasError) return;
-      if (Object.keys(response).length !== fields.length) return;
 
       Storage.addResponse(eventId, response);
-      form.style.display = 'none';
-      document.querySelector('.card:first-of-type h3')?.parentElement?.parentElement && (
-        document.querySelector('.card').style.display = 'none'
-      );
-      document.getElementById('form-success').style.display = 'block';
-      toast('Response submitted!', 'success');
+
+      // Show loading state on button
+      const submitBtn = document.getElementById('submit-btn');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:8px"></span>Submitting…';
+      }
+
+      setTimeout(() => {
+        // Show success
+        document.querySelector('.card').style.display = 'none';
+        const successDiv = document.getElementById('form-success');
+        successDiv.style.display = 'block';
+
+        // Fix #12: scroll to top so success is visible
+        document.getElementById('form-page').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        // Echo identifier in success message
+        if (ev.customIdentifier?.label && response[ev.customIdentifier.label]) {
+          const echo = document.getElementById('success-id-echo');
+          if (echo) echo.textContent = ev.customIdentifier.label + ': ' + response[ev.customIdentifier.label];
+        }
+
+        toast('Registered successfully!', 'success');
+      }, 400);
     }
 
     function resetForm() {
-      document.getElementById('attendee-form').reset();
+      document.getElementById('attendee-form')?.reset();
       document.querySelector('.card').style.display = 'block';
-      document.getElementById('attendee-form').style.display = 'block';
       document.getElementById('form-success').style.display = 'none';
     }
   </script>

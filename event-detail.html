@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>Event Detail | MyMeet</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="stylesheet" href="styles/base.css">
@@ -12,6 +11,157 @@
   <script>try{const p=JSON.parse(localStorage.getItem('mm_prefs')||'{}');if(p.theme==='dark'){document.documentElement.setAttribute('data-theme','dark');document.documentElement.style.background='#0a0a0a';}}catch(e){}</script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU" crossorigin="anonymous"></script>
+  <style>
+    /* ── Registration QR card ── */
+    .reg-qr-card {
+      border: 2px solid var(--accent);
+      border-radius: var(--radius-lg);
+      padding: 28px 24px;
+      text-align: center;
+      background: color-mix(in srgb, var(--accent) 5%, var(--bg-card));
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 10%, transparent);
+    }
+    .reg-qr-card h4 {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .reg-qr-scan-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    .reg-qr-canvas-wrap {
+      display: inline-block;
+      padding: 14px;
+      background: #fff;
+      border-radius: 14px;
+      margin: 14px auto 4px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.14);
+    }
+    .reg-qr-url {
+      font-family: 'SF Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      word-break: break-all;
+      margin: 10px 0 14px;
+      padding: 8px 12px;
+      background: var(--bg-soft);
+      border-radius: var(--radius-sm);
+    }
+    .reg-qr-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: nowrap;
+    }
+    .reg-qr-actions .btn {
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* ── Responses table ── */
+    .responses-section {
+      margin-top: 0;
+    }
+    .responses-table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      margin-top: 12px;
+    }
+    .responses-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .responses-table th {
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--text-muted);
+      background: var(--bg-soft);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+    }
+    .responses-table th.id-col {
+      color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 8%, var(--bg-soft));
+    }
+    .responses-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-soft);
+      max-width: 240px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .responses-table tbody tr:nth-child(even) td {
+      background: color-mix(in srgb, var(--bg-soft) 60%, transparent);
+    }
+    .responses-table tbody tr:nth-child(even) td.id-col {
+      background: color-mix(in srgb, var(--accent) 10%, var(--bg-soft));
+    }
+    .responses-table td.id-col {
+      font-family: 'SF Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .responses-table tr:last-child td {
+      border-bottom: none;
+    }
+    .responses-table tr:hover td {
+      background: var(--bg-soft);
+    }
+    .response-count-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      border-radius: 99px;
+      background: var(--accent);
+      color: var(--text-inv);
+      font-size: 11px;
+      font-weight: 700;
+      margin-left: 6px;
+    }
+    .identifier-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
+      border-radius: 99px;
+      padding: 3px 8px;
+      margin-left: 6px;
+    }
+    /* ── Toggle switch (if not in base.css) ── */
+    .toggle-switch { position:relative;display:inline-block;width:36px;height:20px;cursor:pointer; }
+    .toggle-switch input { opacity:0;width:0;height:0; }
+    .toggle-track { position:absolute;inset:0;background:var(--border);border-radius:99px;transition:background .2s; }
+    .toggle-switch input:checked + .toggle-track { background:var(--accent); }
+    .toggle-thumb { position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2); }
+    .toggle-switch input:checked + .toggle-track .toggle-thumb { transform:translateX(16px); }
+  </style>
 </head>
 <body>
   <main class="container" style="padding-top:40px;padding-bottom:80px">
@@ -28,6 +178,15 @@
     const eventId = parseInt(params.get('id'));
     let ev = Storage.getEvent(eventId);
     let editMode = false;
+    let responsesExpanded = true;
+
+    // Category label map
+    const CAT_LABELS = {
+      'career-fair': 'Career Fair', 'job-fair': 'Job Fair', 'workshop': 'Workshop',
+      'networking': 'Networking', 'conference': 'Conference', 'meetup': 'Meetup',
+      'school-club': 'School Club', 'corporate-event': 'Corporate Event',
+      'seminar': 'Seminar', 'hackathon': 'Hackathon', 'social': 'Social', 'other': 'Other'
+    };
 
     if (!ev) {
       document.getElementById('detail-content').innerHTML = `
@@ -38,37 +197,50 @@
           <a href="events.html" class="btn btn-primary" style="margin-top:8px">Back to Events</a>
         </div>`;
     } else {
+      // Fix #14: Set page title to event name
+      document.title = ev.title + ' | MyMeet';
       renderDetail();
     }
 
     function renderDetail() {
       ev = Storage.getEvent(eventId);
       if (!ev) return;
+
       const dateStr = ev.date ? new Date(ev.date).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'No date set';
       const timeStr = ev.date ? new Date(ev.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '';
       const isOnline = ev.location?.type === 'online';
       const meetOrZoomLink = ev.location?.meetLink || ev.location?.zoomLink || '';
       const meetOrZoomLabel = ev.location?.meetLink ? 'Google Meet' : (ev.location?.zoomLink ? 'Zoom' : 'Online');
+      const catLabel = ev.category ? (CAT_LABELS[ev.category] || ev.category.replace(/-/g,' ')) : '';
+
+      const responses = Storage.getResponsesWithIdentifier(eventId);
+      const responseCount = responses.length;
+      const formUrl = `${location.origin}${location.pathname.replace('event-detail.html','form.html')}?eid=${eventId}`;
 
       document.getElementById('detail-content').innerHTML = `
         <div class="section-header animate-in">
-          <button class="back-btn" onclick="App.navigateTo('events.html')"></button>
+          <button class="back-btn" onclick="App.navigateTo('events.html')" aria-label="Back to Events" title="Back to Events"></button>
           <div style="flex:1">
-            ${editMode ? `<input class="form-input" id="edit-title" value="${S(ev.title)}" style="font-size:24px;font-weight:700;font-family:var(--font-display);padding:8px 12px">` : `<h2 style="font-size:26px">${S(ev.title)}</h2>`}
+            ${editMode
+              ? `<input class="form-input" id="edit-title" value="${S(ev.title)}" style="font-size:24px;font-weight:700;font-family:var(--font-display);padding:8px 12px">`
+              : `<h2 style="font-size:26px">${S(ev.title)}</h2>`}
             <div class="event-meta" style="margin-top:6px">
               <span class="event-meta-item">${dateStr}${timeStr ? ' at ' + timeStr : ''}</span>
               <span class="event-meta-item">${isOnline ? meetOrZoomLabel : S(ev.location?.name || 'In Person')}</span>
-              ${ev.category ? `<span class="badge badge-default">${S(ev.category.replace('-',' '))}</span>` : ''}
+              ${catLabel ? `<span class="badge badge-default">${S(catLabel)}</span>` : ''}
             </div>
           </div>
-          <div style="display:flex;gap:8px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn ${editMode ? 'btn-primary' : 'btn-secondary'}" onclick="toggleEdit()">${editMode ? 'Save' : 'Edit'}</button>
             <button class="btn btn-ghost" onclick="shareEvent()">Share</button>
-            <button class="btn btn-ghost" onclick="generateForm()">Attendee Form</button>
+            <button class="btn btn-ghost" id="form-btn" onclick="generateForm()">
+              Attendee Form${responseCount > 0 ? `<span class="response-count-badge">${responseCount}</span>` : ''}
+            </button>
           </div>
         </div>
 
         <div class="detail-grid animate-in animate-in-delay-1">
+          <!-- Left column -->
           <div>
             <div class="detail-section">
               <h3>About</h3>
@@ -80,19 +252,25 @@
 
             ${editMode ? `
             <div class="detail-section">
-              <h3>Date & Time</h3>
+              <h3>Date &amp; Time</h3>
               <input class="form-input" id="edit-date" type="datetime-local" value="${ev.date || ''}">
             </div>
             <div class="detail-section">
               <h3>Category</h3>
               <select class="form-input" id="edit-category">
                 <option value="">None</option>
-                <option value="career-fair" ${ev.category === 'career-fair' ? 'selected' : ''}>Career Fair</option>
-                <option value="workshop" ${ev.category === 'workshop' ? 'selected' : ''}>Workshop</option>
-                <option value="networking" ${ev.category === 'networking' ? 'selected' : ''}>Networking</option>
-                <option value="conference" ${ev.category === 'conference' ? 'selected' : ''}>Conference</option>
-                <option value="meetup" ${ev.category === 'meetup' ? 'selected' : ''}>Meetup</option>
-                <option value="other" ${ev.category === 'other' ? 'selected' : ''}>Other</option>
+                <option value="career-fair" ${ev.category==='career-fair'?'selected':''}>Career Fair</option>
+                <option value="job-fair" ${ev.category==='job-fair'?'selected':''}>Job Fair</option>
+                <option value="workshop" ${ev.category==='workshop'?'selected':''}>Workshop</option>
+                <option value="networking" ${ev.category==='networking'?'selected':''}>Networking</option>
+                <option value="conference" ${ev.category==='conference'?'selected':''}>Conference</option>
+                <option value="meetup" ${ev.category==='meetup'?'selected':''}>Meetup</option>
+                <option value="school-club" ${ev.category==='school-club'?'selected':''}>School Club</option>
+                <option value="corporate-event" ${ev.category==='corporate-event'?'selected':''}>Corporate Event</option>
+                <option value="seminar" ${ev.category==='seminar'?'selected':''}>Seminar</option>
+                <option value="hackathon" ${ev.category==='hackathon'?'selected':''}>Hackathon</option>
+                <option value="social" ${ev.category==='social'?'selected':''}>Social</option>
+                <option value="other" ${ev.category==='other'?'selected':''}>Other</option>
               </select>
             </div>
             ` : ''}
@@ -142,11 +320,73 @@
                 </div>
               ` : '<p class="text-sm text-muted">No resources attached.</p>'}
             </div>
+
+            <!-- Responses Table -->
+            <div class="detail-section responses-section">
+              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+                <h3 style="margin:0">
+                  Attendee Responses
+                  ${responseCount > 0 ? `<span class="response-count-badge">${responseCount}</span>` : ''}
+                  ${ev.customIdentifier?.label ? `<span class="identifier-pill">🏷 ${S(ev.customIdentifier.label)}</span>` : ''}
+                </h3>
+                ${responseCount > 0 ? `
+                  <div style="display:flex;gap:6px;flex-wrap:nowrap;align-items:center">
+                    <button class="btn btn-primary btn-sm" onclick="exportResponsesCSV()" title="Download CSV">
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="6" y1="1" x2="6" y2="8"/><polyline points="3,5.5 6,8.5 9,5.5"/><line x1="1" y1="11" x2="11" y2="11"/></svg>
+                      CSV
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="exportResponsesExcel()">Excel</button>
+                    <button class="btn btn-ghost btn-sm" onclick="exportResponsesJSON()">JSON</button>
+                  </div>
+                ` : ''}
+              </div>
+              ${responseCount === 0
+                ? `<p class="text-sm text-muted">No responses yet. Share the Registration QR code with attendees.</p>`
+                : buildResponsesTable(responses, ev.customIdentifier?.label)
+              }
+            </div>
           </div>
 
+          <!-- Right column -->
           <div>
+            <!-- Registration QR -->
             <div class="detail-section">
-              <h3>QR Codes (${(ev.qrCodes || []).length})</h3>
+              <h3>Registration QR Code</h3>
+              <div class="reg-qr-card">
+                <h4>📱 Scan to Register</h4>
+                <div class="reg-qr-scan-hint">
+                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="5" height="5" rx="1"/><rect x="8" y="1" width="5" height="5" rx="1"/><rect x="1" y="8" width="5" height="5" rx="1"/><rect x="10" y="10" width="3" height="3" rx=".5"/></svg>
+                  Attendees scan to fill the sign-in form
+                </div>
+                <div class="reg-qr-canvas-wrap">
+                  <div id="reg-qr-canvas"></div>
+                </div>
+                <div class="reg-qr-url">${S(formUrl)}</div>
+                <div class="reg-qr-actions">
+                  <button class="btn btn-primary btn-sm" onclick="downloadRegQR()">↓ Download</button>
+                  <button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText('${formUrl.replace(/'/g,"\'")}');App.toast('Link copied!','success')">Copy Link</button>
+                  <a href="${formUrl}" target="_blank" class="btn btn-ghost btn-sm">Open</a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Custom Identifier info -->
+            ${ev.customIdentifier?.label ? `
+            <div class="detail-section">
+              <h3>Member Identifier</h3>
+              <div class="card card-compact" style="background:color-mix(in srgb,var(--accent) 6%,var(--bg-soft))">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                  <span class="identifier-pill">🏷 Active</span>
+                </div>
+                <div style="font-weight:700;font-size:15px;margin-bottom:4px">${S(ev.customIdentifier.label)}</div>
+                <div class="text-sm text-muted">${ev.customIdentifier.required ? 'Required for all attendees' : 'Optional for attendees'}</div>
+              </div>
+            </div>
+            ` : ''}
+
+            <!-- Existing QR codes -->
+            <div class="detail-section">
+              <h3>Resource QR Codes (${(ev.qrCodes || []).length})</h3>
               ${(ev.qrCodes || []).length ? `
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" id="detail-qrs">
                   ${ev.qrCodes.map((q, i) => `
@@ -157,7 +397,7 @@
                     </div>
                   `).join('')}
                 </div>
-              ` : '<p class="text-sm text-muted">No QR codes generated.</p>'}
+              ` : '<p class="text-sm text-muted">No resource QR codes.</p>'}
             </div>
 
             <div class="detail-section">
@@ -166,7 +406,8 @@
                 <div style="display:grid;gap:10px;font-size:14px">
                   <div style="display:flex;justify-content:space-between"><span class="text-muted">Created</span><span>${new Date(ev.created).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span></div>
                   ${ev.modified ? `<div style="display:flex;justify-content:space-between"><span class="text-muted">Modified</span><span>${new Date(ev.modified).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span></div>` : ''}
-                  <div style="display:flex;justify-content:space-between"><span class="text-muted">Analytics Fields</span><span>${(ev.fieldsSnapshot || []).length}</span></div>
+                  <div style="display:flex;justify-content:space-between"><span class="text-muted">Form Fields</span><span>${(ev.fieldsSnapshot || []).length}</span></div>
+                  <div style="display:flex;justify-content:space-between"><span class="text-muted">Responses</span><span>${responseCount}</span></div>
                   ${ev.slideName ? `<div style="display:flex;justify-content:space-between"><span class="text-muted">Slides</span><span>Locked: ${S(ev.slideName)}</span></div>` : ''}
                 </div>
               </div>
@@ -175,7 +416,7 @@
             <div class="detail-section">
               <h3>Actions</h3>
               <div style="display:flex;flex-direction:column;gap:6px">
-                <button class="btn btn-secondary w-full" onclick="exportExcel()">Export to Excel</button>
+                <button class="btn btn-secondary w-full" onclick="exportExcel()">Export Details to Excel</button>
                 <button class="btn btn-secondary w-full" onclick="duplicateEvent()">Duplicate Event</button>
                 <button class="btn btn-danger w-full" onclick="deleteEvent()">Delete Event</button>
               </div>
@@ -184,16 +425,77 @@
         </div>
       `;
 
-      if (ev.qrCodes?.length) {
-        setTimeout(() => {
+      // Render Registration QR (220px for better visibility)
+      setTimeout(() => {
+        const regEl = document.getElementById('reg-qr-canvas');
+        if (regEl) {
+          try {
+            new QRCode(regEl, {
+              text: formUrl,
+              width: 220, height: 220,
+              colorDark: '#0a0a0a',
+              colorLight: '#ffffff',
+              correctLevel: QRCode.CorrectLevel.M
+            });
+          } catch(e) {}
+        }
+        // Render resource QR codes
+        if (ev.qrCodes?.length) {
           ev.qrCodes.forEach((q, i) => {
             const el = document.getElementById('detail-qr-' + i);
             if (el) {
               try { new QRCode(el, { text: q.url, width: 100, height: 100, colorDark: '#0a0a0a', colorLight: '#ffffff' }); } catch(e) {}
             }
           });
-        }, 50);
-      }
+        }
+      }, 50);
+    }
+
+    function buildResponsesTable(responses, idLabel) {
+      if (!responses.length) return '';
+      // Build column headers from all keys across responses (excluding submittedAt)
+      const allKeys = new Set();
+      responses.forEach(r => Object.keys(r).forEach(k => { if (k !== 'submittedAt') allKeys.add(k); }));
+      // Ensure idLabel is first if present
+      const cols = [];
+      if (idLabel && allKeys.has(idLabel)) { cols.push(idLabel); allKeys.delete(idLabel); }
+      allKeys.forEach(k => cols.push(k));
+
+      return `
+        <div class="responses-table-wrap" style="max-height:360px;overflow-y:auto">
+          <table class="responses-table">
+            <thead>
+              <tr>
+                <th style="width:40px;padding:10px 8px 10px 14px">#</th>
+                ${cols.map(c => `<th class="${c === idLabel ? 'id-col' : ''}">${S(c)}</th>`).join('')}
+                <th>Submitted</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${responses.map((r, i) => `
+                <tr>
+                  <td style="color:var(--text-muted);font-size:12px;padding:10px 8px 10px 14px">${i + 1}</td>
+                  ${cols.map(c => `<td class="${c === idLabel ? 'id-col' : ''}" title="${S(String(r[c] ?? ''))}">${S(String(r[c] ?? '—'))}</td>`).join('')}
+                  <td style="color:var(--text-muted);font-size:12px;white-space:nowrap">${r.submittedAt ? new Date(r.submittedAt).toLocaleString('en-US', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function downloadRegQR() {
+      const canvas = document.querySelector('#reg-qr-canvas canvas') || document.querySelector('#reg-qr-canvas img');
+      if (!canvas) { App.toast('QR not ready', 'error'); return; }
+      let src = '';
+      if (canvas.tagName === 'CANVAS') src = canvas.toDataURL('image/png');
+      else if (canvas.tagName === 'IMG') src = canvas.src;
+      const a = document.createElement('a');
+      a.href = src;
+      a.download = (ev.title || 'event').replace(/[^a-z0-9]/gi, '_') + '_registration_qr.png';
+      a.click();
+      App.toast('QR downloaded!', 'success');
     }
 
     function toggleEdit() {
@@ -249,19 +551,132 @@
       });
     }
 
+    /* ── Export responses to Excel ── */
+    function exportResponsesExcel() {
+      const responses = Storage.getResponsesWithIdentifier(eventId);
+      if (!responses.length) { App.toast('No responses to export', 'error'); return; }
+      const wb = XLSX.utils.book_new();
+
+      // Build headers
+      const allKeys = new Set();
+      const idLabel = ev.customIdentifier?.label;
+      responses.forEach(r => Object.keys(r).forEach(k => allKeys.add(k)));
+      const cols = [];
+      if (idLabel && allKeys.has(idLabel)) { cols.push(idLabel); allKeys.delete(idLabel); }
+      allKeys.delete('submittedAt');
+      allKeys.forEach(k => cols.push(k));
+      cols.push('Submitted At');
+
+      const rows = [cols];
+      responses.forEach(r => {
+        rows.push([
+          ...cols.slice(0, -1).map(c => r[c] ?? ''),
+          r.submittedAt ? new Date(r.submittedAt).toLocaleString('en-US') : ''
+        ]);
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols'] = cols.map(() => ({ wch: 22 }));
+      XLSX.utils.book_append_sheet(wb, ws, 'Responses');
+
+      // Also add event details sheet
+      const ws2 = XLSX.utils.aoa_to_sheet([
+        ['Field', 'Value'],
+        ['Title', ev.title],
+        ['Date', ev.date ? new Date(ev.date).toLocaleString('en-US') : ''],
+        ['Category', ev.category || ''],
+        ['Description', ev.desc || ''],
+        ['Total Responses', responses.length],
+        ['Member Identifier', idLabel || 'None']
+      ]);
+      XLSX.utils.book_append_sheet(wb, ws2, 'Event Details');
+
+      XLSX.writeFile(wb, (ev.title || 'event').replace(/[^a-z0-9]/gi, '_') + '_responses.xlsx');
+      App.toast('Exported to Excel!', 'success');
+    }
+
+    /* ── Export responses to CSV ── */
+    function exportResponsesCSV() {
+      const responses = Storage.getResponsesWithIdentifier(eventId);
+      if (!responses.length) { App.toast('No responses to export', 'error'); return; }
+
+      // Build ordered column list (identifier first)
+      const allKeys = new Set();
+      const idLabel = ev.customIdentifier?.label;
+      responses.forEach(r => Object.keys(r).forEach(k => { if (k !== 'submittedAt') allKeys.add(k); }));
+      const cols = [];
+      if (idLabel && allKeys.has(idLabel)) { cols.push(idLabel); allKeys.delete(idLabel); }
+      allKeys.forEach(k => cols.push(k));
+      cols.push('Submitted At');
+
+      // CSV escape helper
+      function csvCell(val) {
+        const s = String(val ?? '');
+        if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+          return '"' + s.replace(/"/g, '""') + '"';
+        }
+        return s;
+      }
+
+      // Header row
+      let csv = cols.map(csvCell).join(',') + '\n';
+
+      // Data rows
+      responses.forEach(r => {
+        const row = cols.slice(0, -1).map(c => csvCell(r[c] ?? ''));
+        row.push(csvCell(r.submittedAt ? new Date(r.submittedAt).toLocaleString('en-US') : ''));
+        csv += row.join(',') + '\n';
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = (ev.title || 'event').replace(/[^a-z0-9]/gi, '_') + '_responses.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+      App.toast('CSV exported!', 'success');
+    }
+
+    /* ── Export responses to JSON ── */
+    function exportResponsesJSON() {
+      const responses = Storage.getResponsesWithIdentifier(eventId);
+      const data = {
+        _format: 'MyMeet Response Export',
+        _exported: new Date().toISOString(),
+        event: { id: ev.id, title: ev.title, date: ev.date, category: ev.category },
+        customIdentifier: ev.customIdentifier || null,
+        responseCount: responses.length,
+        responses
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = (ev.title || 'event').replace(/[^a-z0-9]/gi, '_') + '_responses.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      App.toast('Responses exported!', 'success');
+    }
+
+    /* ── Export event details to Excel (existing) ── */
     function exportExcel() {
       const wb = XLSX.utils.book_new();
       const ws1 = XLSX.utils.aoa_to_sheet([
         ['Field', 'Value'], ['Title', ev.title],
         ['Date', ev.date ? new Date(ev.date).toLocaleString('en-US') : ''],
+        ['Category', ev.category ? (CAT_LABELS[ev.category] || ev.category) : ''],
         ['Description', ev.desc || ''],
         ['Location', ev.location?.type || ''],
-        ev.location?.type === 'online' ? ['Meet Link', ev.location?.meetLink || ev.location?.zoomLink || ''] : ['Venue', (ev.location?.name || '') + ', ' + (ev.location?.address || '')],
+        ev.location?.type === 'online'
+          ? ['Meet Link', ev.location?.meetLink || ev.location?.zoomLink || '']
+          : ['Venue', (ev.location?.name || '') + ', ' + (ev.location?.address || '')],
+        ['Member Identifier', ev.customIdentifier?.label || 'None'],
         ['Created', new Date(ev.created).toLocaleString('en-US')]
       ]);
       ws1['!cols'] = [{ wch: 22 }, { wch: 60 }];
       XLSX.utils.book_append_sheet(wb, ws1, 'Details');
-      XLSX.writeFile(wb, ev.title.replace(/[^a-z0-9]/gi, '_') + '.xlsx');
+      XLSX.writeFile(wb, (ev.title || 'event').replace(/[^a-z0-9]/gi, '_') + '.xlsx');
       App.toast('Exported!', 'success');
     }
   </script>

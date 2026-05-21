@@ -16,7 +16,7 @@
   <main class="container" style="padding-top:40px;padding-bottom:80px">
 
     <div class="section-header animate-in">
-      <button class="back-btn" onclick="App.navigateTo('dashboard.html')">Back</button>
+      <button class="back-btn" onclick="App.navigateTo('dashboard.html')" aria-label="Back to Dashboard" title="Back to Dashboard"></button>
       <h2>Create Event</h2>
     </div>
 
@@ -37,10 +37,16 @@
           <select class="form-input" id="ev-category">
             <option value="">Select category...</option>
             <option value="career-fair">Career Fair</option>
+            <option value="job-fair">Job Fair</option>
             <option value="workshop">Workshop</option>
             <option value="networking">Networking</option>
             <option value="conference">Conference</option>
             <option value="meetup">Meetup</option>
+            <option value="school-club">School Club</option>
+            <option value="corporate-event">Corporate Event</option>
+            <option value="seminar">Seminar</option>
+            <option value="hackathon">Hackathon</option>
+            <option value="social">Social</option>
             <option value="other">Other</option>
           </select>
         </div>
@@ -92,6 +98,35 @@
           </div>
         </div>
       </div>
+      </div>
+
+      <!-- Custom Member Identifier -->
+      <div class="card" style="margin-bottom:16px">
+        <h3 style="margin-bottom:4px">Custom Member Identifier</h3>
+        <p class="text-sm text-muted" style="margin-bottom:18px">Add a unique ID field for your attendees — e.g. Employee ID, Student ID, Badge Number, Member Code.</p>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <label class="form-label" style="margin:0;white-space:nowrap">Enable identifier</label>
+          <label class="toggle-switch" style="margin-left:auto">
+            <input type="checkbox" id="id-enabled" onchange="toggleIdentifier(this.checked)">
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
+        </div>
+        <div id="identifier-config" style="display:none">
+          <div class="form-group">
+            <label class="form-label">Identifier Label *</label>
+            <input class="form-input" id="id-label" placeholder="e.g. Employee ID, Student ID, Badge #" type="text" maxlength="80">
+            <div class="form-hint">This becomes a column in your attendee responses and exports.</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+            <label class="form-label" style="margin:0">Required for attendees</label>
+            <label class="toggle-switch" style="margin-left:auto">
+              <input type="checkbox" id="id-required" checked>
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
       <div class="wizard-nav"><div></div><button class="btn btn-primary" onclick="wizardNext(1)">Next</button></div>
     </div>
 
@@ -306,6 +341,11 @@
     function handleFileSelect(e) { const f = e.target.files[0]; if (!f) return; slideFile = f; const n = document.getElementById('slide-name'); n.textContent = 'Uploaded: ' + f.name; n.style.display = 'block'; App.toast('Slides uploaded', 'success'); }
     function handleDrop(e) { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleFileSelect({ target: { files: [f] } }); }
 
+    /* ─── Identifier toggle ─── */
+    function toggleIdentifier(on) {
+      document.getElementById('identifier-config').style.display = on ? 'block' : 'none';
+    }
+
     /* ─── Finalize ─── */
     function finalizeEvent() {
       const title = document.getElementById('ev-title').value.trim();
@@ -324,8 +364,15 @@
       } else {
         location = { type: 'inperson', name: document.getElementById('maps-place-name').value, address: document.getElementById('maps-place-addr').value, lat: parseFloat(document.getElementById('maps-lat').value), lng: parseFloat(document.getElementById('maps-lng').value) };
       }
+      // Custom identifier
+      let customIdentifier = null;
+      if (document.getElementById('id-enabled').checked) {
+        const label = document.getElementById('id-label').value.trim();
+        if (!label) { App.toast('Please enter an identifier label or disable the identifier', 'error'); return; }
+        customIdentifier = { label, required: document.getElementById('id-required').checked };
+      }
       const fields = Storage.getFields();
-      const ev = { id: Date.now(), title, date, desc, category, location, resources, qrCodes: [...qrCodes], slideName: slideFile?.name || null, created: new Date().toISOString(), fieldsSnapshot: JSON.parse(JSON.stringify(fields)), mockData: Storage.genMock(fields) };
+      const ev = { id: Date.now(), title, date, desc, category, location, resources, qrCodes: [...qrCodes], slideName: slideFile?.name || null, created: new Date().toISOString(), fieldsSnapshot: JSON.parse(JSON.stringify(fields)), mockData: Storage.genMock(fields), customIdentifier };
       Storage.addEvent(ev);
       App.confetti();
       App.toast('"' + title + '" created!', 'success');
