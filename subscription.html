@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plans & Pricing | MyMeet</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/components.css">
+  <link rel="stylesheet" href="styles/pages.css">
+  <script>try{const p=JSON.parse(localStorage.getItem('mm_prefs')||'{}');if(p.theme==='dark'){document.documentElement.setAttribute('data-theme','dark');document.documentElement.style.background='#0a0a0a';}}catch(e){}</script>
+  <style>
+    /* ── Subscription Page ── */
+    .sub-hero {
+      text-align: center;
+      padding: 64px 24px 48px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sub-hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 10%, transparent);
+      border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+      border-radius: 99px;
+      padding: 4px 12px;
+      margin-bottom: 20px;
+    }
+    .sub-hero h1 {
+      font-size: clamp(28px, 6vw, 48px);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 14px;
+      letter-spacing: -.02em;
+    }
+    .sub-hero p {
+      font-size: 17px;
+      color: var(--text-soft);
+      max-width: 500px;
+      margin: 0 auto 28px;
+      line-height: 1.6;
+    }
+
+    /* ── Billing Toggle ── */
+    .billing-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg-soft);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 5px 5px 5px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-soft);
+    }
+    .billing-toggle span.active { color: var(--text); }
+    .billing-pill {
+      position: relative;
+      width: 44px; height: 24px;
+      border-radius: 99px;
+      background: var(--accent);
+      cursor: pointer;
+      border: none;
+      flex-shrink: 0;
+    }
+    .billing-pill-thumb {
+      position: absolute;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      top: 3px; left: 3px;
+      transition: transform .2s ease;
+    }
+    .billing-pill.annual .billing-pill-thumb { transform: translateX(20px); }
+    .billing-save-badge {
+      font-size: 10px;
+      font-weight: 700;
+      background: color-mix(in srgb, var(--success) 15%, transparent);
+      color: var(--success);
+      border-radius: 99px;
+      padding: 2px 8px;
+      letter-spacing: .04em;
+    }
+
+    /* ── Plans Grid ── */
+    .plans-section {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 48px 20px;
+    }
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+    @media (max-width: 720px) {
+      .plans-grid { grid-template-columns: 1fr; }
+    }
+    .plan-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      padding: 28px 24px 24px;
+      position: relative;
+      transition: box-shadow .2s, border-color .2s, transform .2s;
+    }
+    .plan-card:hover {
+      box-shadow: 0 8px 32px rgba(0,0,0,.08);
+      transform: translateY(-2px);
+    }
+    .plan-card.featured {
+      border-color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 4%, var(--bg));
+      box-shadow: 0 0 0 1px var(--accent), 0 8px 32px rgba(0,0,0,.1);
+    }
+    .plan-card.featured:hover { transform: translateY(-3px); }
+    .plan-badge {
+      position: absolute;
+      top: -11px; left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 99px;
+      padding: 3px 12px;
+      white-space: nowrap;
+    }
+    .plan-name {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .plan-card.featured .plan-name { color: var(--accent); }
+    .plan-price {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+    .plan-currency { font-size: 20px; font-weight: 700; color: var(--text-soft); margin-top: 6px; }
+    .plan-amount { font-size: 44px; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+    .plan-period { font-size: 13px; color: var(--text-muted); }
+    .plan-billed-note {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      min-height: 16px;
+    }
+    .plan-desc {
+      font-size: 13px;
+      color: var(--text-soft);
+      line-height: 1.5;
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .plan-features {
+      list-style: none;
+      padding: 0; margin: 0 0 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .plan-features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      font-size: 13px;
+      color: var(--text-soft);
+      line-height: 1.4;
+    }
+    .plan-features li .feat-icon {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--success) 15%, transparent);
+      color: var(--success);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px;
+      font-weight: 800;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .plan-features li.feat-disabled .feat-icon {
+      background: var(--bg-soft);
+      color: var(--text-muted);
+    }
+    .plan-features li.feat-disabled { opacity: .5; }
+    .plan-cta {
+      width: 100%;
+      padding: 11px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    .plan-cta:hover { background: var(--bg-soft); }
+    .plan-cta.primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .plan-cta.primary:hover { opacity: .9; }
+
+    /* ── Comparison ── */
+    .compare-section {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 20px 64px;
+    }
+    .compare-section h2 {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -.01em;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .compare-table th {
+      padding: 10px 16px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border-bottom: 2px solid var(--border);
+    }
+    .compare-table th.col-plan { text-align: center; }
+    .compare-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--bg-soft);
+      color: var(--text-soft);
+    }
+    .compare-table td.col-plan { text-align: center; font-weight: 600; color: var(--text); }
+    .compare-table tr:last-child td { border-bottom: none; }
+    .compare-table tr:hover td { background: var(--bg-soft); }
+    .check { color: var(--success); font-weight: 700; font-size: 14px; }
+    .cross { color: var(--text-muted); font-size: 14px; }
+    .highlight-col { background: color-mix(in srgb, var(--accent) 4%, transparent); }
+
+    /* ── FAQ ── */
+    .faq-section {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 0 20px 80px;
+    }
+    .faq-section h2 {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -.01em;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .faq-item {
+      border-bottom: 1px solid var(--border);
+    }
+    .faq-q {
+      width: 100%;
+      padding: 16px 0;
+      background: none;
+      border: none;
+      text-align: left;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .faq-q:hover { color: var(--accent); }
+    .faq-chevron {
+      flex-shrink: 0;
+      width: 18px; height: 18px;
+      transition: transform .2s;
+    }
+    .faq-item.open .faq-chevron { transform: rotate(180deg); }
+    .faq-a {
+      font-size: 13px;
+      color: var(--text-soft);
+      line-height: 1.6;
+      padding: 0 0 16px;
+      display: none;
+    }
+    .faq-item.open .faq-a { display: block; }
+
+    /* ── CTA Banner ── */
+    .cta-banner {
+      background: var(--text);
+      color: var(--bg);
+      border-radius: var(--radius);
+      padding: 40px 32px;
+      text-align: center;
+      margin: 0 20px 64px;
+      max-width: 860px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .cta-banner h2 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+    .cta-banner p { font-size: 14px; opacity: .7; margin-bottom: 24px; }
+    .cta-banner .btn-cta {
+      display: inline-block;
+      background: var(--bg);
+      color: var(--text);
+      padding: 12px 28px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      transition: opacity .15s;
+    }
+    .cta-banner .btn-cta:hover { opacity: .85; }
+  </style>
+</head>
+<body>
+<script>document.addEventListener('DOMContentLoaded',()=>document.body.classList.add('page-ready'));</script>
+
+  <main>
+    <!-- Hero -->
+    <div class="sub-hero animate-in">
+      <div class="sub-hero-eyebrow">Pricing</div>
+      <h1>One tool. Every event.</h1>
+      <p>From one-off meetups to high-volume career fairs, pick the plan that fits and scale as you grow.</p>
+      <div class="billing-toggle">
+        <span id="lbl-monthly" class="active">Monthly</span>
+        <button class="billing-pill" id="billing-btn" onclick="toggleBilling()" aria-label="Toggle billing period">
+          <div class="billing-pill-thumb"></div>
+        </button>
+        <span id="lbl-annual">Annual</span>
+        <span class="billing-save-badge" id="save-badge" style="opacity:0">Save 20%</span>
+      </div>
+    </div>
+
+    <!-- Plans -->
+    <div class="plans-section animate-in animate-in-delay-1">
+      <div class="plans-grid" id="plans-grid">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Comparison Table -->
+    <div class="compare-section animate-in animate-in-delay-2">
+      <h2>Compare plans</h2>
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th style="width:40%">Feature</th>
+            <th class="col-plan">Starter</th>
+            <th class="col-plan highlight-col">Pro</th>
+            <th class="col-plan">Team</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Events per month</td>
+            <td class="col-plan">3</td>
+            <td class="col-plan highlight-col">Unlimited</td>
+            <td class="col-plan">Unlimited</td>
+          </tr>
+          <tr>
+            <td>Attendees per event</td>
+            <td class="col-plan">100</td>
+            <td class="col-plan highlight-col">2,000</td>
+            <td class="col-plan">Unlimited</td>
+          </tr>
+          <tr>
+            <td>QR codes per event</td>
+            <td class="col-plan">2</td>
+            <td class="col-plan highlight-col">6</td>
+            <td class="col-plan">6</td>
+          </tr>
+          <tr>
+            <td>Custom registration fields</td>
+            <td class="col-plan">5</td>
+            <td class="col-plan highlight-col">Unlimited</td>
+            <td class="col-plan">Unlimited</td>
+          </tr>
+          <tr>
+            <td>Branded registration page</td>
+            <td class="col-plan"><span class="cross">—</span></td>
+            <td class="col-plan highlight-col"><span class="check">✓</span></td>
+            <td class="col-plan"><span class="check">✓</span></td>
+          </tr>
+          <tr>
+            <td>Analytics & charts</td>
+            <td class="col-plan"><span class="cross">—</span></td>
+            <td class="col-plan highlight-col"><span class="check">✓</span></td>
+            <td class="col-plan"><span class="check">✓</span></td>
+          </tr>
+          <tr>
+            <td>CSV / Excel export</td>
+            <td class="col-plan"><span class="cross">—</span></td>
+            <td class="col-plan highlight-col"><span class="check">✓</span></td>
+            <td class="col-plan"><span class="check">✓</span></td>
+          </tr>
+          <tr>
+            <td>Slide hosting</td>
+            <td class="col-plan"><span class="cross">—</span></td>
+            <td class="col-plan highlight-col"><span class="check">✓</span></td>
+            <td class="col-plan"><span class="check">✓</span></td>
+          </tr>
+          <tr>
+            <td>Team seats</td>
+            <td class="col-plan">1</td>
+            <td class="col-plan highlight-col">1</td>
+            <td class="col-plan">Up to 10</td>
+          </tr>
+          <tr>
+            <td>Priority support</td>
+            <td class="col-plan"><span class="cross">—</span></td>
+            <td class="col-plan highlight-col"><span class="cross">—</span></td>
+            <td class="col-plan"><span class="check">✓</span></td>
+          </tr>
+          <tr>
+            <td>Data backup & import</td>
+            <td class="col-plan"><span class="check">✓</span></td>
+            <td class="col-plan highlight-col"><span class="check">✓</span></td>
+            <td class="col-plan"><span class="check">✓</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- FAQ -->
+    <div class="faq-section">
+      <h2>Common questions</h2>
+      <div id="faq-list"></div>
+    </div>
+
+    <!-- CTA Banner -->
+    <div class="cta-banner">
+      <h2>Ready to run better events?</h2>
+      <p>No credit card required for Starter. Upgrade whenever you need more.</p>
+      <a href="dashboard.html" class="btn-cta">Get started free</a>
+    </div>
+  </main>
+
+  <script src="scripts/storage.js"></script>
+  <script src="scripts/app.js"></script>
+  <script>
+    App.init('subscription');
+
+    /* ── Pricing data ── */
+    const PLANS = [
+      {
+        id: 'starter',
+        name: 'Starter',
+        monthly: 0,
+        annual: 0,
+        desc: 'For individuals running occasional events with no setup overhead.',
+        features: [
+          { text: '3 events per month', on: true },
+          { text: 'Up to 100 attendees per event', on: true },
+          { text: '2 QR codes per event', on: true },
+          { text: '5 custom form fields', on: true },
+          { text: 'Data backup & import', on: true },
+          { text: 'Branded registration page', on: false },
+          { text: 'Analytics & chart builder', on: false },
+          { text: 'CSV / Excel export', on: false },
+        ],
+        cta: 'Get started free',
+        ctaStyle: 'secondary'
+      },
+      {
+        id: 'pro',
+        name: 'Pro',
+        monthly: 0, // Replace with real price
+        annual: 0,  // Replace with real price
+        desc: 'For event organisers who run high-frequency, high-attendance events and need full data control.',
+        features: [
+          { text: 'Unlimited events', on: true },
+          { text: 'Up to 2,000 attendees per event', on: true },
+          { text: '6 QR codes per event', on: true },
+          { text: 'Unlimited custom form fields', on: true },
+          { text: 'Branded registration page', on: true },
+          { text: 'Analytics & chart builder', on: true },
+          { text: 'CSV / Excel export', on: true },
+          { text: 'Slide hosting (host-locked)', on: true },
+        ],
+        cta: 'Start Pro',
+        ctaStyle: 'primary',
+        featured: true,
+        badge: 'Most popular'
+      },
+      {
+        id: 'team',
+        name: 'Team',
+        monthly: 0, // Replace with real price
+        annual: 0,  // Replace with real price
+        desc: 'For organisations with multiple organisers running events across departments or campuses.',
+        features: [
+          { text: 'Everything in Pro', on: true },
+          { text: 'Up to 10 team seats', on: true },
+          { text: 'Unlimited attendees', on: true },
+          { text: 'Priority support', on: true },
+          { text: 'Shared event templates', on: true },
+          { text: 'Role-based access', on: true },
+          { text: 'Dedicated onboarding', on: true },
+          { text: 'Custom branding per seat', on: true },
+        ],
+        cta: 'Contact sales',
+        ctaStyle: 'secondary'
+      }
+    ];
+
+    const FAQ = [
+      {
+        q: 'Can I switch plans at any time?',
+        a: 'Yes. Upgrading takes effect immediately and you\'re only charged the prorated difference. Downgrading takes effect at the end of your current billing period.'
+      },
+      {
+        q: 'What counts as an "event"?',
+        a: 'Any event you create through the dashboard counts toward your monthly limit. Duplicated events count as new events. Deleted events within the undo window do not count.'
+      },
+      {
+        q: 'Is my attendee data stored securely?',
+        a: 'All attendee responses are stored locally in your browser via localStorage — no data leaves your device unless you explicitly export it. For Team plans, server-side storage options are available.'
+      },
+      {
+        q: 'Do you offer discounts for universities or non-profits?',
+        a: 'Yes, we offer verified educational and non-profit pricing. Reach out to the team with your institution email and we\'ll apply the discount within 24 hours.'
+      },
+      {
+        q: 'What happens to my data if I downgrade?',
+        a: 'Your events, responses, and settings are preserved. You just lose access to Pro/Team features going forward. Your historical exports stay yours.'
+      },
+      {
+        q: 'Is there a free trial for Pro?',
+        a: 'Pro includes a 14-day trial with no credit card required. After the trial period, you\'ll be prompted to add a payment method to continue.'
+      }
+    ];
+
+    let isAnnual = false;
+
+    function toggleBilling() {
+      isAnnual = !isAnnual;
+      const btn = document.getElementById('billing-btn');
+      const lblM = document.getElementById('lbl-monthly');
+      const lblA = document.getElementById('lbl-annual');
+      const badge = document.getElementById('save-badge');
+      btn.classList.toggle('annual', isAnnual);
+      lblM.classList.toggle('active', !isAnnual);
+      lblA.classList.toggle('active', isAnnual);
+      badge.style.opacity = isAnnual ? '1' : '0';
+      renderPlans();
+    }
+
+    function formatPrice(monthly, annual) {
+      const amount = isAnnual ? Math.round(monthly * 0.8) : monthly;
+      return amount;
+    }
+
+    function renderPlans() {
+      const grid = document.getElementById('plans-grid');
+      grid.innerHTML = PLANS.map(plan => {
+        const price = formatPrice(plan.monthly, plan.annual);
+        const isFree = price === 0;
+        const billedNote = !isFree && isAnnual
+          ? `Billed annually (${(price * 12).toLocaleString('en-US', {style:'currency',currency:'USD',maximumFractionDigits:0})}/yr)`
+          : !isFree ? 'Billed monthly' : '';
+
+        return `
+          <div class="plan-card ${plan.featured ? 'featured' : ''}">
+            ${plan.badge ? `<div class="plan-badge">${plan.badge}</div>` : ''}
+            <div class="plan-name">${plan.name}</div>
+            <div class="plan-price">
+              <span class="plan-currency">${isFree ? '' : '$'}</span>
+              <span class="plan-amount">${isFree ? 'Free' : price}</span>
+              ${!isFree ? '<span class="plan-period">/ mo</span>' : ''}
+            </div>
+            <div class="plan-billed-note">${billedNote}</div>
+            <div class="plan-desc">${plan.desc}</div>
+            <ul class="plan-features">
+              ${plan.features.map(f => `
+                <li class="${f.on ? '' : 'feat-disabled'}">
+                  <div class="feat-icon">${f.on ? '✓' : '—'}</div>
+                  <span>${f.text}</span>
+                </li>
+              `).join('')}
+            </ul>
+            <button class="plan-cta ${plan.ctaStyle === 'primary' ? 'primary' : ''}" onclick="handleCTA('${plan.id}')">${plan.cta}</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function handleCTA(planId) {
+      if (planId === 'starter') {
+        App.navigateTo('dashboard.html');
+      } else if (planId === 'team') {
+        App.toast('Sales contact coming soon. Reach out via help.html for now.', 'info');
+      } else {
+        App.toast('Payment flow coming soon. Pricing TBD.', 'info');
+      }
+    }
+
+    function renderFAQ() {
+      const list = document.getElementById('faq-list');
+      list.innerHTML = FAQ.map((item, i) => `
+        <div class="faq-item" id="faq-${i}">
+          <button class="faq-q" onclick="toggleFAQ(${i})">
+            <span>${item.q}</span>
+            <svg class="faq-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <polyline points="4 6 8 10 12 6"/>
+            </svg>
+          </button>
+          <div class="faq-a">${item.a}</div>
+        </div>
+      `).join('');
+    }
+
+    function toggleFAQ(i) {
+      const item = document.getElementById('faq-' + i);
+      const wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
+      if (!wasOpen) item.classList.add('open');
+    }
+
+    renderPlans();
+    renderFAQ();
+  </script>
+</body>
+</html>

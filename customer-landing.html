@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register | MyMeet</title>
+  <meta name="description" content="Event registration powered by MyMeet.">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/components.css">
+  <link rel="stylesheet" href="styles/pages.css">
+  <script>try{const p=JSON.parse(localStorage.getItem('mm_prefs')||'{}');if(p.theme==='dark'){document.documentElement.setAttribute('data-theme','dark');document.documentElement.style.background='#0a0a0a';}}catch(e){}</script>
+  <style>
+    /* ── Customer Landing Page ── */
+
+    /* Branding accent override — set via JS from ev.branding.accentColor */
+    :root { --brand-accent: var(--accent); --brand-text-on-accent: #fff; }
+
+    .cl-wrap {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Top branding bar ── */
+    .cl-brand-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .cl-brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .cl-brand-logo-img {
+      height: 30px;
+      width: auto;
+      max-width: 160px;
+      object-fit: contain;
+      border-radius: 4px;
+    }
+    .cl-brand-logo-text {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -.01em;
+    }
+    .cl-powered {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .cl-powered img {
+      height: 14px;
+      opacity: .5;
+    }
+
+    /* ── Hero ── */
+    .cl-hero {
+      padding: 40px 24px 32px;
+      text-align: center;
+      background: var(--bg);
+      position: relative;
+    }
+    .cl-hero-accent-bar {
+      height: 4px;
+      background: var(--brand-accent);
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      border-radius: 0 0 4px 4px;
+    }
+    .cl-category-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      border-radius: 99px;
+      padding: 3px 10px;
+      margin-bottom: 12px;
+      background: color-mix(in srgb, var(--brand-accent) 12%, transparent);
+      color: var(--brand-accent);
+      border: 1px solid color-mix(in srgb, var(--brand-accent) 20%, transparent);
+    }
+    .cl-hero h1 {
+      font-size: clamp(22px, 5vw, 34px);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 10px;
+      letter-spacing: -.01em;
+    }
+    .cl-meta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 6px 14px;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    .cl-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .cl-meta-icon {
+      width: 14px; height: 14px;
+      opacity: .5;
+    }
+    .cl-desc {
+      font-size: 14px;
+      color: var(--text-soft);
+      max-width: 500px;
+      margin: 10px auto 0;
+      line-height: 1.6;
+    }
+
+    /* ── Progress indicator (multi-step) ── */
+    .cl-steps {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-soft);
+    }
+    .cl-step-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: background .2s, transform .2s;
+    }
+    .cl-step-dot.active {
+      background: var(--brand-accent);
+      transform: scale(1.4);
+    }
+    .cl-step-dot.done { background: var(--success); }
+
+    /* ── Form area ── */
+    .cl-body {
+      flex: 1;
+      max-width: 580px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 32px 20px 64px;
+    }
+    .cl-section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    .cl-identifier-wrap {
+      border: 2px solid var(--brand-accent);
+      border-radius: var(--radius);
+      padding: 16px 18px 14px;
+      margin-bottom: 20px;
+      background: color-mix(in srgb, var(--brand-accent) 6%, transparent);
+      position: relative;
+    }
+    .cl-identifier-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--brand-accent);
+      background: color-mix(in srgb, var(--brand-accent) 12%, transparent);
+      border-radius: 99px;
+      padding: 3px 9px;
+      margin-bottom: 8px;
+    }
+    .cl-identifier-badge::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--brand-accent);
+      display: inline-block;
+    }
+    .cl-submit-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--brand-accent);
+      color: var(--brand-text-on-accent);
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+      margin-top: 8px;
+    }
+    .cl-submit-btn:hover { opacity: .92; }
+    .cl-submit-btn:active { transform: scale(.99); }
+    .cl-submit-btn:disabled { opacity: .6; cursor: default; }
+
+    /* ── Success screen ── */
+    .cl-success {
+      text-align: center;
+      padding: 48px 24px;
+    }
+    .cl-success-icon {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--success) 15%, transparent);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 30px;
+      border: 2px solid color-mix(in srgb, var(--success) 30%, transparent);
+    }
+    .cl-success h2 { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+    .cl-success p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+    .cl-success-id {
+      display: inline-block;
+      margin-top: 14px;
+      background: var(--bg-soft);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 16px;
+      font-size: 13px;
+      font-family: 'SF Mono', monospace;
+      color: var(--text);
+    }
+
+    /* ── Footer ── */
+    .cl-footer {
+      text-align: center;
+      padding: 16px 24px 32px;
+      font-size: 12px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      margin-top: auto;
+    }
+    .cl-footer strong { color: var(--text-soft); }
+
+    /* ── Not found state ── */
+    .cl-not-found {
+      text-align: center;
+      padding: 80px 24px;
+    }
+    .cl-not-found h2 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+    .cl-not-found p { color: var(--text-muted); font-size: 14px; }
+
+    /* ── Spin animation ── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+<script>document.addEventListener('DOMContentLoaded',()=>document.body.classList.add('page-ready'));</script>
+
+  <div class="cl-wrap" id="cl-root">
+    <!-- Populated by JS -->
+  </div>
+
+  <div class="toast-container" id="toasts"></div>
+
+  <script src="scripts/storage.js"></script>
+  <script>
+    const S = Storage.sanitize;
+
+    function toast(msg, type = '') {
+      const c = document.getElementById('toasts');
+      const t = document.createElement('div');
+      t.className = 'toast ' + type;
+      t.textContent = msg;
+      c.appendChild(t);
+      setTimeout(() => t.remove(), 3000);
+    }
+
+    const params = new URLSearchParams(location.search);
+    const eventId = parseInt(params.get('eid'));
+    const ev = Storage.getEvent(eventId);
+    const root = document.getElementById('cl-root');
+
+    // ── Apply brand accent colour if set ──
+    if (ev?.branding?.accentColor) {
+      document.documentElement.style.setProperty('--brand-accent', ev.branding.accentColor);
+    }
+
+    const catLabels = {
+      'career-fair': 'Career Fair', 'job-fair': 'Job Fair', 'workshop': 'Workshop',
+      'networking': 'Networking', 'conference': 'Conference', 'meetup': 'Meetup',
+      'school-club': 'School Club', 'corporate-event': 'Corporate Event',
+      'seminar': 'Seminar', 'hackathon': 'Hackathon', 'social': 'Social', 'other': 'Other'
+    };
+
+    if (!ev) {
+      root.innerHTML = `
+        <div class="cl-brand-bar">
+          <div class="cl-brand-logo">
+            <img src="background_removed.png" alt="MyMeet" class="cl-brand-logo-img">
+          </div>
+        </div>
+        <div class="cl-not-found">
+          <div style="font-size:48px;margin-bottom:16px">📭</div>
+          <h2>Registration not found</h2>
+          <p>This link may be incorrect or the event was removed.<br>Check with the event organiser for the correct QR code.</p>
+        </div>
+      `;
+    } else {
+      const fields = ev.fieldsSnapshot?.length ? ev.fieldsSnapshot : Storage.getFields();
+      const hasIdentifier = !!ev.customIdentifier?.label;
+
+      if (!fields.length && !hasIdentifier) {
+        root.innerHTML = `
+          <div class="cl-brand-bar">
+            <div class="cl-brand-logo">
+              ${ev.branding?.logoUrl
+                ? `<img src="${S(ev.branding.logoUrl)}" alt="${S(ev.branding?.companyName || ev.title)}" class="cl-brand-logo-img">`
+                : `<img src="background_removed.png" alt="MyMeet" class="cl-brand-logo-img">`}
+              ${ev.branding?.companyName ? `<span class="cl-brand-logo-text">${S(ev.branding.companyName)}</span>` : ''}
+            </div>
+          </div>
+          <div class="cl-hero">
+            <div class="cl-hero-accent-bar"></div>
+            <h1>${S(ev.title)}</h1>
+            <p class="cl-desc">No registration fields have been set up for this event yet.</p>
+          </div>
+        `;
+      } else {
+        const dateStr = ev.date ? new Date(ev.date).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' }) : '';
+        const timeStr = ev.date ? new Date(ev.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '';
+        const catLabel = ev.category ? (catLabels[ev.category] || ev.category) : '';
+        const locationStr = ev.location?.type === 'online' ? 'Online' : ev.location?.name || '';
+        const branding = ev.branding || {};
+
+        root.innerHTML = `
+          <!-- Brand bar -->
+          <div class="cl-brand-bar">
+            <div class="cl-brand-logo">
+              ${branding.logoUrl
+                ? `<img src="${S(branding.logoUrl)}" alt="${S(branding.companyName || ev.title)}" class="cl-brand-logo-img">`
+                : `<img src="background_removed.png" alt="MyMeet" class="cl-brand-logo-img">`}
+              ${branding.companyName ? `<span class="cl-brand-logo-text">${S(branding.companyName)}</span>` : ''}
+            </div>
+            <div class="cl-powered">
+              Powered by <img src="background_removed.png" alt="MyMeet">
+            </div>
+          </div>
+
+          <!-- Hero -->
+          <div class="cl-hero">
+            <div class="cl-hero-accent-bar"></div>
+            ${catLabel ? `<div class="cl-category-badge">${S(catLabel)}</div>` : ''}
+            <h1>${S(ev.title)}</h1>
+            <div class="cl-meta">
+              ${dateStr ? `<div class="cl-meta-item">
+                <svg class="cl-meta-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="1" y="2" width="12" height="10" rx="1.5"/><line x1="1" y1="5.5" x2="13" y2="5.5"/>
+                  <line x1="4.5" y1="2" x2="4.5" y2="5.5"/><line x1="9.5" y1="2" x2="9.5" y2="5.5"/>
+                </svg>
+                ${S(dateStr)}${timeStr ? ' · ' + S(timeStr) : ''}
+              </div>` : ''}
+              ${locationStr ? `<div class="cl-meta-item">
+                <svg class="cl-meta-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M7 1C4.8 1 3 2.8 3 5c0 3 4 8 4 8s4-5 4-8c0-2.2-1.8-4-4-4z"/><circle cx="7" cy="5" r="1.2"/>
+                </svg>
+                ${S(locationStr)}
+              </div>` : ''}
+            </div>
+            ${ev.desc ? `<p class="cl-desc">${S(ev.desc)}</p>` : ''}
+          </div>
+
+          <!-- Form section -->
+          <div class="cl-body">
+            <div class="cl-section-label">Your details</div>
+
+            <div class="card" id="cl-form-card">
+              <form id="cl-form" onsubmit="submitCLForm(event)" novalidate>
+
+                ${hasIdentifier ? `
+                  <div class="cl-identifier-wrap">
+                    <div class="cl-identifier-badge">Member Identifier</div>
+                    <label class="form-label" style="margin-bottom:8px">
+                      ${S(ev.customIdentifier.label)}${ev.customIdentifier.required ? ' *' : ''}
+                    </label>
+                    <input
+                      class="form-input"
+                      name="identifier"
+                      type="text"
+                      placeholder="Enter your ${S(ev.customIdentifier.label.toLowerCase())}"
+                      ${ev.customIdentifier.required ? 'required' : ''}
+                      maxlength="200"
+                      autocomplete="off"
+                      style="font-family:'SF Mono',monospace;letter-spacing:.03em"
+                    >
+                  </div>
+                ` : ''}
+
+                ${fields.map((f, i) => `
+                  <div class="form-group">
+                    <label class="form-label">${S(f.name)} *</label>
+                    ${f.type === 'select' ? `
+                      <select class="form-input" name="field_${i}" required>
+                        <option value="">Select...</option>
+                        ${(f.options || []).map(o => `<option value="${S(o)}">${S(o)}</option>`).join('')}
+                      </select>
+                    ` : f.type === 'email' ? `
+                      <input class="form-input" name="field_${i}" type="email" placeholder="your@email.com" required autocomplete="email">
+                    ` : f.type === 'phone' ? `
+                      <input class="form-input" name="field_${i}" type="tel" placeholder="+971 50 123 4567" required autocomplete="tel">
+                    ` : f.type === 'number' ? `
+                      <input class="form-input" name="field_${i}" type="number" placeholder="Enter a number" required>
+                    ` : `
+                      <input class="form-input" name="field_${i}" type="text" placeholder="Enter ${S(f.name.toLowerCase())}" required maxlength="500" autocomplete="off">
+                    `}
+                  </div>
+                `).join('')}
+
+                <button type="submit" class="cl-submit-btn" id="cl-submit-btn">
+                  Complete registration
+                </button>
+              </form>
+            </div>
+
+            <!-- Success -->
+            <div id="cl-success" style="display:none">
+              <div class="card cl-success">
+                <div class="cl-success-icon">✓</div>
+                <h2>You're registered!</h2>
+                <p>Your details have been recorded for<br><strong>${S(ev.title)}</strong>.</p>
+                ${hasIdentifier ? `<div class="cl-success-id" id="cl-id-echo"></div>` : ''}
+                <button class="btn btn-secondary" style="margin-top:24px" onclick="resetCLForm()">Submit another response</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="cl-footer">
+            Powered by <strong>MyMeet</strong> &mdash; Event registration made simple
+          </div>
+        `;
+      }
+    }
+
+    function submitCLForm(e) {
+      e.preventDefault();
+      const form = document.getElementById('cl-form');
+      const formData = new FormData(form);
+      const fields = ev.fieldsSnapshot?.length ? ev.fieldsSnapshot : Storage.getFields();
+      const response = {};
+      let hasError = false;
+
+      if (ev.customIdentifier?.label) {
+        const idVal = (formData.get('identifier') || '').trim();
+        if (ev.customIdentifier.required && !idVal) {
+          toast(ev.customIdentifier.label + ' is required', 'error'); return;
+        }
+        response[ev.customIdentifier.label] = idVal;
+      }
+
+      fields.forEach((f, i) => {
+        if (hasError) return;
+        let val = (formData.get('field_' + i) || '').trim();
+        if (!val && f.type !== 'select') { toast(f.name + ' is required', 'error'); hasError = true; return; }
+        if (val.length > 1000) { toast(f.name + ': Input too long (max 1000 chars)', 'error'); hasError = true; return; }
+        if (f.type === 'email') {
+          const v = Storage.validate(val, 'email');
+          if (!v.valid) { toast(f.name + ': ' + v.msg, 'error'); hasError = true; return; }
+        }
+        if (f.type === 'phone') {
+          const v = Storage.validate(val, 'phone');
+          if (!v.valid) { toast(f.name + ': ' + v.msg, 'error'); hasError = true; return; }
+        }
+        if (f.type === 'select' && f.options?.length && !f.options.includes(val)) {
+          toast(f.name + ': Invalid selection', 'error'); hasError = true; return;
+        }
+        response[f.name] = val;
+      });
+
+      if (hasError) return;
+
+      const btn = document.getElementById('cl-submit-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:8px"></span>Submitting...';
+
+      Storage.addResponse(eventId, response);
+
+      setTimeout(() => {
+        document.getElementById('cl-form-card').style.display = 'none';
+        const successDiv = document.getElementById('cl-success');
+        successDiv.style.display = 'block';
+
+        if (ev.customIdentifier?.label && response[ev.customIdentifier.label]) {
+          const echo = document.getElementById('cl-id-echo');
+          if (echo) echo.textContent = ev.customIdentifier.label + ': ' + response[ev.customIdentifier.label];
+        }
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        toast('Registered successfully!', 'success');
+      }, 500);
+    }
+
+    function resetCLForm() {
+      document.getElementById('cl-form')?.reset();
+      const btn = document.getElementById('cl-submit-btn');
+      if (btn) { btn.disabled = false; btn.textContent = 'Complete registration'; }
+      document.getElementById('cl-form-card').style.display = 'block';
+      document.getElementById('cl-success').style.display = 'none';
+    }
+  </script>
+</body>
+</html>

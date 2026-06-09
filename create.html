@@ -372,7 +372,32 @@
         customIdentifier = { label, required: document.getElementById('id-required').checked };
       }
       const fields = Storage.getFields();
-      const ev = { id: Date.now(), title, date, desc, category, location, resources, qrCodes: [...qrCodes], slideName: slideFile?.name || null, created: new Date().toISOString(), fieldsSnapshot: JSON.parse(JSON.stringify(fields)), mockData: Storage.genMock(fields), customIdentifier };
+
+      // ── CHANGE 1: attach branding from Storage prefs so customer-landing.html can read ev.branding ──
+      const branding = Storage.getPrefs().branding || null;
+
+      const eid = Date.now();
+
+      // ── CHANGE 2: registration QR points to customer-landing.html instead of form.html ──
+      const registrationQR = { url: `customer-landing.html?eid=${eid}`, label: 'Attendee Registration' };
+      const allQrCodes = [registrationQR, ...qrCodes];
+
+      const ev = {
+        id: eid,
+        title,
+        date,
+        desc,
+        category,
+        location,
+        resources,
+        qrCodes: allQrCodes,
+        slideName: slideFile?.name || null,
+        created: new Date().toISOString(),
+        fieldsSnapshot: JSON.parse(JSON.stringify(fields)),
+        mockData: Storage.genMock(fields),
+        customIdentifier,
+        branding,  // { companyName, accentColor, logoUrl } from form-builder, or null
+      };
       Storage.addEvent(ev);
       App.confetti();
       App.toast('"' + title + '" created!', 'success');
